@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bounce — Investment Outcome Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F5F2EC;
+    --paper-2: #EDE8DE;
+    --ink: #1A1F26;
+    --ink-2: #3B4148;
+    --muted: #6A6F76;
+    --teal: #1C4A47;
+    --teal-2: #2A6661;
+    --clay: #BC6C3C;
+    --clay-soft: #E8C7AA;
+    --green: #2C7A4D;
+    --rule: #D3CFC3;
+    --rule-soft: #E2DED2;
+    --bg-input: #FBF8F1;
+    --bg-output: #E9EFEE;
+    --bg-key: #FAE6D6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'tnum' 1, 'cv11' 1;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 48px 56px 80px;
+  }
+  /* ---------- HEADER ---------- */
+  .head { border-bottom: 1px solid var(--rule); padding-bottom: 22px; margin-bottom: 36px; }
+  .eyebrow {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--clay);
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 44px;
+    color: var(--teal);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+    max-width: 640px;
+  }
+  /* ---------- SECTION ---------- */
+  section { margin-bottom: 44px; }
+  .section-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 18px; padding-bottom: 8px; border-bottom: 1px solid var(--rule-soft); }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--clay);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--teal);
+    letter-spacing: -0.01em;
+  }
+  .section-hint {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ---------- GRIDS / TABLES ---------- */
+  .row {
+    display: grid;
+    grid-template-columns: 280px 1fr 220px;
+    align-items: center;
+    gap: 16px;
+    padding: 7px 0;
+    border-bottom: 1px dotted var(--rule-soft);
+    font-size: 14px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row.is-section-key { background: var(--paper-2); margin: 4px -10px; padding: 9px 10px; border-radius: 3px; border-bottom: none; }
+  .row .label { color: var(--ink-2); }
+  .row .label.key { font-weight: 600; color: var(--teal); }
+  .row .ctrl { display: flex; align-items: center; gap: 8px; }
+  .row .note { font-size: 12px; color: var(--muted); font-style: italic; }
+
+  /* ---------- INPUTS ---------- */
+  input[type="number"], input[type="text"], select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--clay);
+    background: var(--bg-input);
+    border: none;
+    border-bottom: 1.5px solid var(--clay);
+    padding: 4px 8px;
+    width: 130px;
+    text-align: right;
+    outline: none;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  input[type="number"]:focus, input[type="text"]:focus, select:focus {
+    background: #FFF5E8;
+    border-bottom-color: var(--teal);
+  }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type="number"] { -moz-appearance: textfield; }
+  select { width: 130px; cursor: pointer; }
+  .unit { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-left: 2px; }
+
+  /* ---------- COMPUTED VALUES ---------- */
+  .computed {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    background: var(--bg-output);
+    padding: 4px 10px;
+    border-radius: 2px;
+    min-width: 130px;
+    text-align: right;
+    display: inline-block;
+  }
+  .computed.key {
+    background: var(--bg-key);
+    color: var(--teal);
+    font-weight: 600;
+  }
+  .computed.big { font-size: 17px; padding: 6px 12px; }
+
+  /* ---------- BUSINESS MODEL TABLE ---------- */
+  .biz-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .biz-table th, .biz-table td {
+    padding: 8px 10px;
+    text-align: right;
+    border-bottom: 1px dotted var(--rule-soft);
+  }
+  .biz-table th:first-child, .biz-table td:first-child { text-align: left; }
+  .biz-table th {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--teal);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1.5px solid var(--teal);
+    background: transparent;
+  }
+  .biz-table td.label { color: var(--ink-2); }
+  .biz-table td.label.key { font-weight: 600; color: var(--teal); }
+  .biz-table td.input-cell { padding: 4px 6px; }
+  .biz-table input[type="number"] { width: 100px; font-size: 13px; padding: 3px 6px; }
+  .biz-table td.value { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--ink); }
+  .biz-table tr.key-row { background: var(--paper-2); }
+  .biz-table tr.key-row td.value { font-weight: 600; color: var(--teal); }
+  .biz-table tr.negative td.value { color: var(--clay); }
+  .biz-table tr.divider td { border-bottom: 1px solid var(--rule); padding-top: 14px; }
+
+  /* ---------- ROUND CARDS ---------- */
+  .rounds-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  .round-card {
+    background: var(--paper-2);
+    border-top: 2px solid var(--clay);
+    padding: 16px 18px 18px;
+    border-radius: 0 0 4px 4px;
+  }
+  .round-card.muted { opacity: 0.7; border-top-color: var(--rule); }
+  .round-title {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--teal);
+    margin-bottom: 4px;
+    letter-spacing: -0.005em;
+  }
+  .round-sub { font-size: 11px; color: var(--muted); margin-bottom: 14px; font-style: italic; }
+  .round-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px dotted var(--rule-soft);
+    font-size: 13px;
+  }
+  .round-row:last-child { border-bottom: none; padding-top: 8px; }
+  .round-row .label { color: var(--ink-2); font-size: 12.5px; }
+  .round-row input { width: 90px; padding: 3px 7px; font-size: 13px; }
+  .round-row .computed { min-width: 80px; padding: 3px 8px; font-size: 13px; }
+
+  /* ---------- RETURN PANEL ---------- */
+  .return-panel {
+    background: linear-gradient(135deg, var(--teal) 0%, var(--teal-2) 100%);
+    color: #F5F2EC;
+    padding: 24px 32px;
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+    margin-top: 18px;
+  }
+  .stat { text-align: left; }
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(245, 242, 236, 0.7);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    font-weight: 500;
+    color: #F5F2EC;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+  }
+  .stat-sub {
+    font-size: 12px;
+    color: rgba(245, 242, 236, 0.6);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* ---------- TOGGLE ---------- */
+  .toggle-row { display: flex; align-items: center; gap: 12px; }
+  .pill-toggle {
+    display: inline-flex;
+    background: var(--paper-2);
+    border-radius: 100px;
+    padding: 3px;
+    border: 1px solid var(--rule);
+  }
+  .pill-toggle button {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 100px;
+    border: none;
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pill-toggle button.active {
+    background: var(--clay);
+    color: white;
+  }
+
+  /* ---------- SENSITIVITY TABLE ---------- */
+  .sens-wrap { overflow-x: auto; }
+  .sens-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+  }
+  .sens-table th, .sens-table td {
+    padding: 9px 10px;
+    text-align: center;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .sens-table thead th {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--teal);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: transparent;
+    padding: 6px 10px;
+    border-bottom: 1.5px solid var(--teal);
+  }
+  .sens-table tbody th {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--teal);
+    background: var(--paper-2);
+    text-align: right;
+    padding: 8px 12px;
+    letter-spacing: 0.02em;
+  }
+  .sens-cell {
+    position: relative;
+    color: var(--ink);
+    font-weight: 500;
+    cursor: default;
+    transition: transform 0.08s ease;
+  }
+  .sens-cell:hover { transform: scale(1.04); z-index: 20; }
+  .sens-tip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--teal);
+    color: #F5F2EC;
+    padding: 9px 13px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 30;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.22);
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease;
+    text-align: left;
+  }
+  .sens-tip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--teal);
+  }
+  .sens-cell:hover .sens-tip { opacity: 1; }
+  .sens-tip .tip-label { color: rgba(245,242,236,0.65); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; margin-right: 6px; }
+  .sens-tip .tip-val { font-weight: 600; }
+  .sens-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .legend-bar {
+    width: 140px;
+    height: 8px;
+    border-radius: 2px;
+    background: linear-gradient(90deg,
+      hsl(38, 36%, 92%) 0%,
+      hsl(170, 18%, 75%) 35%,
+      hsl(174, 38%, 45%) 70%,
+      hsl(174, 55%, 25%) 100%);
+  }
+  .footer {
+    margin-top: 56px;
+    padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.7;
+  }
+  .footer strong { color: var(--ink-2); font-style: normal; font-weight: 600; }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 900px) {
+    .container { padding: 32px 24px; }
+    .row { grid-template-columns: 1fr; gap: 6px; padding: 10px 0; }
+    .row .note { display: none; }
+    .rounds-grid { grid-template-columns: 1fr; }
+    .return-panel { grid-template-columns: 1fr; gap: 20px; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="head">
+    <div class="eyebrow">Private & Confidential — Internal Model</div>
+    <h1>Bounce — Investment Outcome Model</h1>
+    <div class="subtitle">Interactive single-page model: edit any value in clay; calculated cells update live. Exit valuation uses the final month's run-rate, not the full-year average.</div>
+  </header>
+
+  <!-- ============== 01 UNIT ECONOMICS ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <span class="section-title">Unit economics</span>
+      <span class="section-hint">edit the clay-coloured cells</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Days per month</span>
+      <span class="ctrl"><input type="number" id="days" value="30" step="1"><span class="unit">days</span></span>
+      <span class="note">Working days per scooter</span>
+    </div>
+    <div class="row">
+      <span class="label">Price per day</span>
+      <span class="ctrl"><input type="number" id="price" value="285" step="5"><span class="unit">₹/day</span></span>
+      <span class="note">Rack rate per rental day</span>
+    </div>
+    <div class="row">
+      <span class="label">Utilization</span>
+      <span class="ctrl"><input type="number" id="util" value="88" step="1" min="0" max="100"><span class="unit">%</span></span>
+      <span class="note">Used across the business model — single source of truth</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">Revenue per scooter / month</span>
+      <span><span class="computed key" id="revPerScooter">—</span><span class="unit"> ₹</span></span>
+      <span class="note">Days × Price × Utilization</span>
+    </div>
+    <div class="row">
+      <span class="label">Energy / battery swap</span>
+      <span class="ctrl"><input type="number" id="energy" value="2300" step="50"><span class="unit">₹</span></span>
+      <span class="note">Per scooter per month</span>
+    </div>
+    <div class="row">
+      <span class="label">Repairs &amp; maintenance</span>
+      <span class="ctrl"><input type="number" id="rm" value="500" step="50"><span class="unit">₹</span></span>
+      <span class="note">Per scooter per month</span>
+    </div>
+    <div class="row">
+      <span class="label">Hub fixed + ground ops</span>
+      <span class="ctrl"><input type="number" id="hub" value="850" step="50"><span class="unit">₹</span></span>
+      <span class="note">Per scooter per month</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">CM unlevered (pre-lease)</span>
+      <span><span class="computed key" id="cmUnlevered">—</span><span class="unit"> ₹</span></span>
+      <span class="note">Revenue − variable costs</span>
+    </div>
+    <div class="row">
+      <span class="label">Asset lease cost</span>
+      <span class="ctrl"><input type="number" id="lease" value="1850" step="50"><span class="unit">₹</span></span>
+      <span class="note">Paid to finco — operator's ₹15K equity, debt the rest</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">CM post-lease (operator)</span>
+      <span><span class="computed key" id="cmPostLease">—</span><span class="unit"> ₹</span></span>
+      <span class="note">What the operating company keeps</span>
+    </div>
+  </section>
+
+  <!-- ============== 02 BUSINESS MODEL ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <span class="section-title">Business model</span>
+      <span class="section-hint">edit closing fleet, cities, and HQ costs by year</span>
+    </div>
+    <table class="biz-table">
+      <thead>
+        <tr>
+          <th>(₹ Cr unless noted)</th>
+          <th>FY27</th><th>FY28</th><th>FY29</th><th>FY30</th><th>FY31</th>
+        </tr>
+      </thead>
+      <tbody id="bizBody">
+        <!-- rendered by JS -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============== 03 EXIT (RUN-RATE) ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <span class="section-title">Exit valuation — FY31 closing run-rate</span>
+      <span class="section-hint">annualised from final-month closing fleet</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">Exit-month closing fleet</span>
+      <span><span class="computed" id="exitFleet">—</span><span class="unit"> scooters</span></span>
+      <span class="note">FY31 closing fleet from §2</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">Annualised revenue (run-rate)</span>
+      <span><span class="computed key" id="rrRev">—</span><span class="unit"> ₹ Cr</span></span>
+      <span class="note">Exit fleet × monthly revenue × 12</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">Annualised PBT (run-rate)</span>
+      <span><span class="computed key" id="rrPbt">—</span><span class="unit"> ₹ Cr</span></span>
+      <span class="note">Exit fleet × CM post-lease × 12 − FY31 HQ costs</span>
+    </div>
+    <div class="row">
+      <span class="label">Multiple type</span>
+      <span class="ctrl toggle-row">
+        <span class="pill-toggle">
+          <button id="mtPbt" class="active" type="button">PBT multiple</button>
+          <button id="mtRev" type="button">Revenue multiple</button>
+        </span>
+      </span>
+      <span class="note">Toggle between PBT × PE and Revenue × multiple</span>
+    </div>
+    <div class="row">
+      <span class="label">Exit multiple</span>
+      <span class="ctrl"><input type="number" id="mult" value="25" step="0.5"><span class="unit" id="multUnit">×</span></span>
+      <span class="note">PE for a profitable consumer mobility platform</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">Exit equity value</span>
+      <span><span class="computed key big" id="exitValueCr">—</span><span class="unit"> ₹ Cr</span></span>
+      <span class="note">Run-rate metric × multiple</span>
+    </div>
+    <div class="row">
+      <span class="label">Exit equity value ($M)</span>
+      <span><span class="computed" id="exitValueUsd">—</span><span class="unit"> $M</span></span>
+      <span class="note">@ ₹8.7 Cr per $M</span>
+    </div>
+  </section>
+
+  <!-- ============== 04 ROUNDS & OWNERSHIP ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <span class="section-title">Rounds &amp; ownership</span>
+      <span class="section-hint">Round 3 included; set its cheque to 0 if it doesn't happen</span>
+    </div>
+    <div class="rounds-grid">
+
+      <div class="round-card">
+        <div class="round-title">Round 1</div>
+        <div class="round-sub">Mid-2026 · ~8K scooters</div>
+        <div class="round-row"><span class="label">Round size</span><input type="number" id="r1Size" value="12" step="1"></div>
+        <div class="round-row"><span class="label">Nexus cheque</span><input type="number" id="r1Cheque" value="10" step="0.5"></div>
+        <div class="round-row"><span class="label">Post-money</span><input type="number" id="r1Post" value="50" step="5"></div>
+        <div class="round-row"><span class="label">Nexus stake</span><span class="computed" id="r1Stake">—</span></div>
+      </div>
+
+      <div class="round-card">
+        <div class="round-title">Round 2</div>
+        <div class="round-sub">Late FY28 · ~55K scooters</div>
+        <div class="round-row"><span class="label">Round size</span><input type="number" id="r2Size" value="35" step="5"></div>
+        <div class="round-row"><span class="label">Nexus cheque</span><input type="number" id="r2Cheque" value="7" step="0.5"></div>
+        <div class="round-row"><span class="label">Pre-money</span><input type="number" id="r2Pre" value="250" step="10"></div>
+        <div class="round-row"><span class="label">Post-money</span><span class="computed" id="r2Post">—</span></div>
+        <div class="round-row"><span class="label">Nexus stake</span><span class="computed" id="r2Stake">—</span></div>
+      </div>
+
+      <div class="round-card" id="r3Card">
+        <div class="round-title">Round 3 <span style="font-family:'Inter';font-size:10px;color:var(--clay);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-left:6px;">optional</span></div>
+        <div class="round-sub">FY30 · pre-IPO / growth — set cheque to 0 to skip</div>
+        <div class="round-row"><span class="label">Round size</span><input type="number" id="r3Size" value="60" step="5"></div>
+        <div class="round-row"><span class="label">Nexus cheque</span><input type="number" id="r3Cheque" value="0" step="0.5"></div>
+        <div class="round-row"><span class="label">Pre-money</span><input type="number" id="r3Pre" value="700" step="25"></div>
+        <div class="round-row"><span class="label">Post-money</span><span class="computed" id="r3Post">—</span></div>
+        <div class="round-row"><span class="label">Nexus stake</span><span class="computed" id="r3Stake">—</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============== 05 NEXUS RETURN ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <span class="section-title">Nexus return</span>
+    </div>
+    <div class="return-panel">
+      <div class="stat">
+        <div class="stat-label">Total invested</div>
+        <div class="stat-value"><span id="totalInvested">—</span><span style="font-family:'Inter';font-size:18px;opacity:.7;"> $M</span></div>
+        <div class="stat-sub">Sum of R1 + R2 + R3 cheques</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Exit proceeds</div>
+        <div class="stat-value"><span id="proceeds">—</span><span style="font-family:'Inter';font-size:18px;opacity:.7;"> $M</span></div>
+        <div class="stat-sub">Final stake × exit equity value</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Gross MOIC</div>
+        <div class="stat-value"><span id="moic">—</span><span style="font-family:'Inter';font-size:18px;opacity:.7;">×</span></div>
+        <div class="stat-sub" id="moicSub">Final stake: <span id="finalStake">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 06 SENSITIVITY ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <span class="section-title">Sensitivity — exit valuation</span>
+      <span class="section-hint">cell = company exit value · hover for Nexus stake + MOIC</span>
+    </div>
+    <div class="sens-wrap">
+      <table class="sens-table">
+        <thead>
+          <tr>
+            <th style="text-align:left; color:var(--muted); text-transform:none; letter-spacing:0; font-style:italic; font-weight:400; font-size:11px;">utilisation ↓ &nbsp; multiple →</th>
+            <th>20×</th><th>25×</th><th>30×</th><th>35×</th><th>40×</th><th>45×</th><th>50×</th>
+          </tr>
+        </thead>
+        <tbody id="sensBody">
+          <!-- rendered by JS -->
+        </tbody>
+      </table>
+    </div>
+    <div class="sens-legend">
+      <span>Heatmap by company exit value</span>
+      <span class="legend-bar"></span>
+      <span id="sensLegendRange">— · —</span>
+      <span style="margin-left:auto;">Multiple type follows the toggle in §3</span>
+    </div>
+  </section>
+
+  <div class="footer">
+    <strong>Notes.</strong> All numbers in INR Crores unless stated. USD conversion at ₹8.7 Cr = $1M (current rate, adjust if needed).
+    Exit valuation uses the FY31 <em>closing</em> fleet annualised (closing fleet × per-scooter revenue × 12), not the full-year average, to reflect run-rate value at the exit moment.
+    PBT is computed as CM post-lease run-rate less the FY31 HQ cost row from §2 — change the §2 HQ row to flex G&A intensity at exit.
+    Set R3 cheque to 0 if no third round; the model handles round-skipping cleanly.
+    Final stake reflects sequential dilution through every round where new shares are issued.
+  </div>
+
+</div>
+
+<script>
+// =============================================================
+// State + defaults
+// =============================================================
+const fyKeys = ['FY27','FY28','FY29','FY30','FY31'];
+const closingDefaults = [31072, 79072, 146072, 218500, 292500];
+const citiesDefaults  = [4, 5, 6, 7, 9];
+const hqDefaults      = [62, 78, 96, 114, 132];      // Rs Cr/yr
+const openingFY27Default = 8072;
+
+// Number formatters
+const fmtInt = (n) => isFinite(n) ? Math.round(n).toLocaleString('en-IN') : '—';
+const fmtCr  = (n) => isFinite(n) ? Math.round(n).toLocaleString('en-IN') : '—';
+const fmtCr1 = (n) => isFinite(n) ? n.toLocaleString('en-IN',{maximumFractionDigits:1, minimumFractionDigits:1}) : '—';
+const fmtPct = (n) => isFinite(n) ? (n*100).toFixed(1) + '%' : '—';
+const fmtUsd = (n) => isFinite(n) ? '$' + n.toLocaleString('en-IN',{maximumFractionDigits:1, minimumFractionDigits:1}) : '—';
+const fmt1   = (n) => isFinite(n) ? n.toLocaleString('en-IN',{maximumFractionDigits:1, minimumFractionDigits:1}) : '—';
+
+// Build business-model table
+function buildBizTable() {
+  const tbody = document.getElementById('bizBody');
+  tbody.innerHTML = '';
+  const rows = [
+    {id:'opening', label:'Opening fleet', kind:'value-int', input:true},
+    {id:'closing', label:'Closing fleet', kind:'input-int', defaults:closingDefaults, key:true},
+    {id:'avg',     label:'Avg fleet',     kind:'value-int'},
+    {id:'cities',  label:'Cities',        kind:'input-int', defaults:citiesDefaults},
+    {id:'spacer1', kind:'divider'},
+    {id:'revenue', label:'Revenue',                 kind:'value-cr', key:true},
+    {id:'cmUnlev', label:'CM unlevered',            kind:'value-cr'},
+    {id:'lease',   label:'Asset lease cost',        kind:'value-cr'},
+    {id:'cmPost',  label:'CM post-lease',           kind:'value-cr', key:true},
+    {id:'spacer2', kind:'divider'},
+    {id:'hq',      label:'HQ + corporate (G&A)',    kind:'input-cr', defaults:hqDefaults},
+    {id:'pbt',     label:'PBT (CM post-lease − G&A)', kind:'value-cr', key:true},
+    {id:'pbtm',    label:'PBT margin',              kind:'value-pct'}
+  ];
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    if (r.kind === 'divider') {
+      tr.className = 'divider';
+      const td = document.createElement('td');
+      td.colSpan = 6;
+      td.style.padding = '0';
+      td.style.borderBottom = '1px solid var(--rule)';
+      td.style.height = '8px';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+    if (r.key) tr.classList.add('key-row');
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'label' + (r.key ? ' key' : '');
+    tdLabel.textContent = r.label;
+    tr.appendChild(tdLabel);
+    for (let i = 0; i < 5; i++) {
+      const td = document.createElement('td');
+      if (r.kind === 'input-int' || r.kind === 'input-cr') {
+        td.className = 'input-cell';
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.id = `${r.id}_${i}`;
+        inp.value = r.defaults[i];
+        inp.step = r.kind === 'input-cr' ? 1 : 100;
+        inp.addEventListener('input', recalc);
+        td.appendChild(inp);
+      } else {
+        td.className = 'value';
+        td.id = `${r.id}_${i}`;
+        td.textContent = '—';
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+// =============================================================
+// Recalculation engine
+// =============================================================
+function recalc() {
+  // ---- 1. Unit econ ----
+  const days = +document.getElementById('days').value || 0;
+  const price = +document.getElementById('price').value || 0;
+  const util = (+document.getElementById('util').value || 0) / 100;
+  const energy = +document.getElementById('energy').value || 0;
+  const rm = +document.getElementById('rm').value || 0;
+  const hub = +document.getElementById('hub').value || 0;
+  const lease = +document.getElementById('lease').value || 0;
+
+  const revPerScooter = days * price * util;
+  const cmUnlev = revPerScooter - energy - rm - hub;
+  const cmPost  = cmUnlev - lease;
+
+  document.getElementById('revPerScooter').textContent = fmtInt(revPerScooter);
+  document.getElementById('cmUnlevered').textContent   = fmtInt(cmUnlev);
+  document.getElementById('cmPostLease').textContent   = fmtInt(cmPost);
+
+  // ---- 2. Business model ----
+  const closings = [];
+  for (let i = 0; i < 5; i++) closings.push(+document.getElementById(`closing_${i}`).value || 0);
+  const hqVals = [];
+  for (let i = 0; i < 5; i++) hqVals.push(+document.getElementById(`hq_${i}`).value || 0);
+
+  for (let i = 0; i < 5; i++) {
+    const opening = i === 0 ? openingFY27Default : closings[i-1];
+    const closing = closings[i];
+    const avg = (opening + closing) / 2;
+
+    const revenue = avg * revPerScooter * 12 / 1e7;        // Rs Cr
+    const cmU     = avg * cmUnlev       * 12 / 1e7;
+    const leaseTot= avg * lease         * 12 / 1e7;
+    const cmP     = cmU - leaseTot;
+    const pbt     = cmP - hqVals[i];
+    const pbtM    = revenue > 0 ? pbt/revenue : 0;
+
+    document.getElementById(`opening_${i}`).textContent = fmtInt(opening);
+    document.getElementById(`avg_${i}`).textContent     = fmtInt(avg);
+    document.getElementById(`revenue_${i}`).textContent = fmtCr(revenue);
+    document.getElementById(`cmUnlev_${i}`).textContent = fmtCr(cmU);
+    document.getElementById(`lease_${i}`).textContent   = fmtCr(leaseTot);
+    document.getElementById(`cmPost_${i}`).textContent  = fmtCr(cmP);
+    document.getElementById(`pbt_${i}`).textContent     = fmtCr(pbt);
+    document.getElementById(`pbtm_${i}`).textContent    = fmtPct(pbtM);
+
+    // colour negative PBT in clay
+    const pbtRow = document.getElementById(`pbt_${i}`).parentElement;
+    if (pbt < 0) pbtRow.classList.add('negative'); else pbtRow.classList.remove('negative');
+  }
+
+  // ---- 3. Exit run-rate (based on FY31 closing fleet) ----
+  const exitFleet = closings[4];
+  const rrRev = exitFleet * revPerScooter * 12 / 1e7;
+  const rrCmPost = exitFleet * cmPost * 12 / 1e7;
+  const rrPbt = rrCmPost - hqVals[4];
+
+  document.getElementById('exitFleet').textContent = fmtInt(exitFleet);
+  document.getElementById('rrRev').textContent     = fmtCr(rrRev);
+  document.getElementById('rrPbt').textContent     = fmtCr(rrPbt);
+
+  // ---- Exit multiple ----
+  const mult = +document.getElementById('mult').value || 0;
+  const usePbt = document.getElementById('mtPbt').classList.contains('active');
+  const exitCr = usePbt ? rrPbt * mult : rrRev * mult;
+  const exitUsd = exitCr / 8.7;
+
+  document.getElementById('exitValueCr').textContent  = fmtCr(exitCr);
+  document.getElementById('exitValueUsd').textContent = fmtUsd(exitUsd);
+
+  // ---- 4. Rounds & ownership ----
+  const r1Cheque = +document.getElementById('r1Cheque').value || 0;
+  const r1Post   = +document.getElementById('r1Post').value || 0;
+  const r1Stake  = r1Post > 0 ? r1Cheque / r1Post : 0;
+
+  const r2Size   = +document.getElementById('r2Size').value || 0;
+  const r2Cheque = +document.getElementById('r2Cheque').value || 0;
+  const r2Pre    = +document.getElementById('r2Pre').value || 0;
+  const r2Post   = r2Pre + r2Size;
+  const r2Stake  = r2Post > 0 ? r1Stake * (r2Pre / r2Post) + r2Cheque / r2Post : r1Stake;
+
+  const r3Size   = +document.getElementById('r3Size').value || 0;
+  const r3Cheque = +document.getElementById('r3Cheque').value || 0;
+  const r3Pre    = +document.getElementById('r3Pre').value || 0;
+  const r3Post   = r3Pre + r3Size;
+  // If R3 size = 0, treat as no round (no dilution)
+  const r3Active = r3Size > 0;
+  const r3Stake  = r3Active && r3Post > 0
+    ? r2Stake * (r3Pre / r3Post) + r3Cheque / r3Post
+    : r2Stake;
+
+  document.getElementById('r1Stake').textContent = fmtPct(r1Stake);
+  document.getElementById('r2Post').textContent  = fmtUsd(r2Post);
+  document.getElementById('r2Stake').textContent = fmtPct(r2Stake);
+  document.getElementById('r3Post').textContent  = fmtUsd(r3Post);
+  document.getElementById('r3Stake').textContent = fmtPct(r3Stake);
+
+  const r3Card = document.getElementById('r3Card');
+  if (!r3Active) r3Card.classList.add('muted'); else r3Card.classList.remove('muted');
+
+  // ---- 5. Returns ----
+  const finalStake = r3Stake;
+  const totalInvested = r1Cheque + r2Cheque + r3Cheque;
+  const proceeds = finalStake * exitUsd;
+  const moic = totalInvested > 0 ? proceeds / totalInvested : 0;
+
+  document.getElementById('totalInvested').textContent = fmt1(totalInvested);
+  document.getElementById('proceeds').textContent      = fmt1(proceeds);
+  document.getElementById('moic').textContent          = fmt1(moic);
+  document.getElementById('finalStake').textContent    = fmtPct(finalStake);
+
+  // ---- 6. Sensitivity table ----
+  renderSensitivity({
+    days, price, energy, rm, hub, lease,
+    exitFleet, hqFY31: hqVals[4],
+    usePbt, finalStake, totalInvested
+  });
+}
+
+// =============================================================
+// Sensitivity table
+// =============================================================
+const SENS_UTILS = [75, 77.5, 80, 82.5, 85, 87.5, 90];
+const SENS_MULTS = [20, 25, 30, 35, 40, 45, 50];
+
+function computeOutcome(utilPct, mult, ctx) {
+  const util = utilPct / 100;
+  const revPer = ctx.days * ctx.price * util;
+  const cmU = revPer - ctx.energy - ctx.rm - ctx.hub;
+  const cmP = cmU - ctx.lease;
+  const rrRev = ctx.exitFleet * revPer * 12 / 1e7;
+  const rrCmP = ctx.exitFleet * cmP   * 12 / 1e7;
+  const rrPbt = rrCmP - ctx.hqFY31;
+  const metric = ctx.usePbt ? rrPbt : rrRev;
+  const exitCr = metric * mult;
+  const exitUsd = exitCr / 8.7;
+  const proceeds = ctx.finalStake * exitUsd;
+  const moic = ctx.totalInvested > 0 ? proceeds / ctx.totalInvested : 0;
+  return { exitUsd, proceeds, moic };
+}
+
+// teal-clay gradient heatmap colour from a normalised value (0..1)
+function heatColour(t) {
+  // Clamp
+  t = Math.max(0, Math.min(1, t));
+  // Pale paper -> mid teal -> deep teal
+  if (t < 0.35) {
+    // pale cream → muted teal-grey
+    const k = t / 0.35;
+    const h = 38 + (170 - 38) * k;
+    const s = 36 + (18 - 36) * k;
+    const l = 92 + (75 - 92) * k;
+    return `hsl(${h}, ${s}%, ${l}%)`;
+  } else if (t < 0.70) {
+    // muted teal → vivid teal
+    const k = (t - 0.35) / 0.35;
+    const h = 170 + (174 - 170) * k;
+    const s = 18 + (38 - 18) * k;
+    const l = 75 + (45 - 75) * k;
+    return `hsl(${h}, ${s}%, ${l}%)`;
+  } else {
+    const k = (t - 0.70) / 0.30;
+    const h = 174;
+    const s = 38 + (55 - 38) * k;
+    const l = 45 + (25 - 45) * k;
+    return `hsl(${h}, ${s}%, ${l}%)`;
+  }
+}
+
+function fmtUsdM(n) {
+  if (!isFinite(n)) return '—';
+  if (Math.abs(n) >= 1000) return '$' + (n/1000).toLocaleString('en-IN', {maximumFractionDigits:2, minimumFractionDigits:1}) + 'b';
+  return '$' + Math.round(n).toLocaleString('en-IN') + 'm';
+}
+
+function renderSensitivity(ctx) {
+  const tbody = document.getElementById('sensBody');
+  tbody.innerHTML = '';
+
+  // First pass — compute all outcomes
+  const grid = [];
+  let minVal = Infinity, maxVal = -Infinity;
+  for (const u of SENS_UTILS) {
+    const row = [];
+    for (const m of SENS_MULTS) {
+      const out = computeOutcome(u, m, ctx);
+      row.push(out);
+      if (out.exitUsd < minVal) minVal = out.exitUsd;
+      if (out.exitUsd > maxVal) maxVal = out.exitUsd;
+    }
+    grid.push(row);
+  }
+
+  // Render rows
+  SENS_UTILS.forEach((u, i) => {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    th.textContent = u + '%';
+    tr.appendChild(th);
+
+    SENS_MULTS.forEach((m, j) => {
+      const out = grid[i][j];
+      const td = document.createElement('td');
+      td.className = 'sens-cell';
+      const t = maxVal > minVal ? (out.exitUsd - minVal) / (maxVal - minVal) : 0.5;
+      td.style.background = heatColour(t);
+      // Dark text on dark cells, ink text on light cells
+      td.style.color = t > 0.65 ? '#F5F2EC' : 'var(--ink)';
+      td.textContent = '';  // clear before adding children
+      const valSpan = document.createElement('span');
+      valSpan.textContent = fmtUsdM(out.exitUsd);
+      td.appendChild(valSpan);
+
+      const tip = document.createElement('div');
+      tip.className = 'sens-tip';
+      const moicStr = isFinite(out.moic) ? out.moic.toFixed(1) + '×' : '—';
+      tip.innerHTML =
+        `<div><span class="tip-label">Company</span><span class="tip-val">${fmtUsdM(out.exitUsd)}</span></div>` +
+        `<div><span class="tip-label">Nexus</span><span class="tip-val">${fmtUsdM(out.proceeds)}</span></div>` +
+        `<div><span class="tip-label">MOIC</span><span class="tip-val">${moicStr}</span></div>`;
+      td.appendChild(tip);
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('sensLegendRange').textContent =
+    `${fmtUsdM(minVal)} · ${fmtUsdM(maxVal)}`;
+}
+
+// =============================================================
+// Wire up
+// =============================================================
+function init() {
+  buildBizTable();
+  // Attach listeners to unit-econ, exit, and rounds inputs
+  ['days','price','util','energy','rm','hub','lease','mult',
+   'r1Size','r1Cheque','r1Post','r2Size','r2Cheque','r2Pre',
+   'r3Size','r3Cheque','r3Pre'].forEach(id => {
+    document.getElementById(id).addEventListener('input', recalc);
+  });
+  // Multiple type toggle
+  const mtPbt = document.getElementById('mtPbt');
+  const mtRev = document.getElementById('mtRev');
+  mtPbt.addEventListener('click', () => {
+    mtPbt.classList.add('active'); mtRev.classList.remove('active');
+    document.getElementById('mult').value = 25;
+    recalc();
+  });
+  mtRev.addEventListener('click', () => {
+    mtRev.classList.add('active'); mtPbt.classList.remove('active');
+    document.getElementById('mult').value = 5;
+    recalc();
+  });
+  recalc();
+}
+init();
+</script>
+</body>
+</html>
