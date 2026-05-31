@@ -1,1 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bounce — Investment Outcome Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F5F2EC;
+    --paper-2: #EDE8DE;
+    --ink: #1A1F26;
+    --ink-2: #3B4148;
+    --muted: #6A6F76;
+    --teal: #1C4A47;
+    --teal-2: #2A6661;
+    --clay: #BC6C3C;
+    --clay-soft: #E8C7AA;
+    --green: #2C7A4D;
+    --rule: #D3CFC3;
+    --rule-soft: #E2DED2;
+    --bg-input: #FBF8F1;
+    --bg-output: #E9EFEE;
+    --bg-key: #FAE6D6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'tnum' 1, 'cv11' 1;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 48px 56px 80px;
+  }
+  /* ---------- HEADER ---------- */
+  .head { border-bottom: 1px solid var(--rule); padding-bottom: 22px; margin-bottom: 36px; }
+  .eyebrow {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--clay);
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 44px;
+    color: var(--teal);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+    max-width: 640px;
+  }
+  /* ---------- SECTION ---------- */
+  section { margin-bottom: 44px; }
+  .section-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 18px; padding-bottom: 8px; border-bottom: 1px solid var(--rule-soft); }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--clay);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--teal);
+    letter-spacing: -0.01em;
+  }
+  .section-hint {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .sub-head {
+    margin: 18px 0 8px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--rule-soft);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--clay);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
 
+  /* ---------- GRIDS / TABLES ---------- */
+  .row {
+    display: grid;
+    grid-template-columns: 280px 1fr 220px;
+    align-items: center;
+    gap: 16px;
+    padding: 7px 0;
+    border-bottom: 1px dotted var(--rule-soft);
+    font-size: 14px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row.is-section-key { background: var(--paper-2); margin: 4px -10px; padding: 9px 10px; border-radius: 3px; border-bottom: none; }
+  .row .label { color: var(--ink-2); }
+  .row .label.key { font-weight: 600; color: var(--teal); }
+  .row .ctrl { display: flex; align-items: center; gap: 8px; }
+  .row .note { font-size: 12px; color: var(--muted); font-style: italic; }
+
+  /* ---------- INPUTS ---------- */
+  input[type="number"], input[type="text"], select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--clay);
+    background: var(--bg-input);
+    border: none;
+    border-bottom: 1.5px solid var(--clay);
+    padding: 4px 8px;
+    width: 130px;
+    text-align: right;
+    outline: none;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  input[type="number"]:focus, input[type="text"]:focus, select:focus {
+    background: #FFF5E8;
+    border-bottom-color: var(--teal);
+  }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type="number"] { -moz-appearance: textfield; }
+  select { width: 130px; cursor: pointer; }
+  .unit { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-left: 2px; }
+
+  /* ---------- COMPUTED VALUES ---------- */
+  .computed {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    background: var(--bg-output);
+    padding: 4px 10px;
+    border-radius: 2px;
+    min-width: 130px;
+    text-align: right;
+    display: inline-block;
+  }
+  .computed.key {
+    background: var(--bg-key);
+    color: var(--teal);
+    font-weight: 600;
+  }
+  .computed.big { font-size: 17px; padding: 6px 12px; }
+
+  /* ---------- BUSINESS MODEL TABLE ---------- */
+  .biz-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .biz-table th, .biz-table td {
+    padding: 8px 10px;
+    text-align: right;
+    border-bottom: 1px dotted var(--rule-soft);
+  }
+  .biz-table th:first-child, .biz-table td:first-child { text-align: left; }
+  .biz-table th {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--teal);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1.5px solid var(--teal);
+    background: transparent;
+  }
+  .biz-table td.label { color: var(--ink-2); }
+  .biz-table td.label.key { font-weight: 600; color: var(--teal); }
+  .biz-table td.input-cell { padding: 4px 6px; }
+  .biz-table input[type="number"] { width: 100px; font-size: 13px; padding: 3px 6px; }
+  .biz-table td.value { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--ink); }
+  .biz-table tr.key-row { background: var(--paper-2); }
+  .biz-table tr.key-row td.value { font-weight: 600; color: var(--teal); }
+  .biz-table tr.negative td.value { color: var(--clay); }
+  .biz-table tr.divider td { border-bottom: 1px solid var(--rule); padding-top: 14px; }
+
+  /* ---------- ROUND CARDS ---------- */
+  .rounds-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  .round-card {
+    background: var(--paper-2);
+    border-top: 2px solid var(--clay);
+    padding: 16px 18px 18px;
+    border-radius: 0 0 4px 4px;
+  }
+  .round-card.muted { opacity: 0.7; border-top-color: var(--rule); }
+  .round-title {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--teal);
+    margin-bottom: 4px;
+    letter-spacing: -0.005em;
+  }
+  .round-sub { font-size: 11px; color: var(--muted); margin-bottom: 14px; font-style: italic; }
+  .round-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px dotted var(--rule-soft);
+    font-size: 13px;
+  }
+  .round-row:last-child { border-bottom: none; padding-top: 8px; }
+  .round-row .label { color: var(--ink-2); font-size: 12.5px; }
+  .round-row input { width: 90px; padding: 3px 7px; font-size: 13px; }
+  .round-row .computed { min-width: 80px; padding: 3px 8px; font-size: 13px; }
+
+  /* ---------- RETURN PANEL ---------- */
+  .return-panel {
+    background: linear-gradient(135deg, var(--teal) 0%, var(--teal-2) 100%);
+    color: #F5F2EC;
+    padding: 24px 32px;
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+    margin-top: 18px;
+  }
+  .stat { text-align: left; }
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(245, 242, 236, 0.7);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    font-weight: 500;
+    color: #F5F2EC;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+  }
+  .stat-sub {
+    font-size: 12px;
+    color: rgba(245, 242, 236, 0.6);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* ---------- TOGGLE ---------- */
+  .toggle-row { display: flex; align-items: center; gap: 12px; }
+  .pill-toggle {
+    display: inline-flex;
+    background: var(--paper-2);
+    border-radius: 100px;
+    padding: 3px;
+    border: 1px solid var(--rule);
+  }
+  .pill-toggle button {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 100px;
+    border: none;
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pill-toggle button.active {
+    background: var(--clay);
+    color: white;
+  }
+
+  /* ---------- SENSITIVITY TABLE ---------- */
+  .sens-wrap { overflow-x: auto; }
+  .sens-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+  }
+  .sens-table th, .sens-table td {
+    padding: 9px 10px;
+    text-align: center;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .sens-table thead th {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--teal);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: transparent;
+    padding: 6px 10px;
+    border-bottom: 1.5px solid var(--teal);
+  }
+  .sens-table tbody th {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--teal);
+    background: var(--paper-2);
+    text-align: right;
+    padding: 8px 12px;
+    letter-spacing: 0.02em;
+  }
+  .sens-cell {
+    position: relative;
+    color: var(--ink);
+    font-weight: 500;
+    cursor: default;
+    transition: transform 0.08s ease;
+  }
+  .sens-cell:hover { transform: scale(1.04); z-index: 20; }
+  .sens-tip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--teal);
+    color: #F5F2EC;
+    padding: 9px 13px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 30;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.22);
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease;
+    text-align: left;
+  }
+  .sens-tip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--teal);
+  }
+  .sens-cell:hover .sens-tip { opacity: 1; }
+  .sens-tip .tip-label { color: rgba(245,242,236,0.65); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; margin-right: 6px; }
+  .sens-tip .tip-val { font-weight: 600; }
+  .sens-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .legend-bar {
+    width: 140px;
+    height: 8px;
+    border-radius: 2px;
+    background: linear-gradient(90deg,
+      hsl(38, 36%, 92%) 0%,
+      hsl(170, 18%, 75%) 35%,
+      hsl(174, 38%, 45%) 70%,
+      hsl(174, 55%, 25%) 100%);
+  }
+  .footer {
+    margin-top: 56px;
+    padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.7;
+  }
+  .footer strong { color: var(--ink-2); font-style: normal; font-weight: 600; }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 900px) {
+    .container { padding: 32px 24px; }
+    .row { grid-template-columns: 1fr; gap: 6px; padding: 10px 0; }
+    .row .note { display: none; }
+    .rounds-grid { grid-template-columns: 1fr; }
+    .return-panel { grid-template-columns: 1fr; gap: 20px; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="head">
+    <div class="eyebrow">Private & Confidential — Internal Model</div>
+    <h1>Bounce — Investment Outcome Model</h1>
+    <div class="subtitle">Interactive single-page model: edit any value in clay; calculated cells update live. Exit valuation uses the final month's run-rate, not the full-year average.</div>
+  </header>
+
+  <!-- Global assumption: USD/INR exchange rate -->
+  <div style="display:flex; align-items:center; gap:14px; padding: 14px 16px; margin-bottom: 28px; background: var(--paper-2); border-radius: 4px; border: 1px solid var(--rule-soft);">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--clay); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">Global assumption</span>
+    <span style="font-size: 14px; color: var(--ink-2);">USD / INR exchange rate</span>
+    <span class="ctrl"><input type="number" id="usdInr" value="100" step="1" min="1" style="width:80px;"><span class="unit">₹ / $</span></span>
+    <span style="font-size: 12px; color: var(--muted); font-style: italic; margin-left: auto;">Used for all USD ↔ INR conversions throughout the model</span>
+  </div>
+
+  <!-- ============== 01 UNIT ECONOMICS ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <span class="section-title">Unit economics</span>
+      <span class="section-hint">edit the clay-coloured cells</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Days per month</span>
+      <span class="ctrl"><input type="number" id="days" value="30" step="1"><span class="unit">days</span></span>
+      <span class="note">Working days per scooter</span>
+    </div>
+    <div class="row">
+      <span class="label">Price per day</span>
+      <span class="ctrl"><input type="number" id="price" value="290" step="5"><span class="unit">₹/day</span></span>
+      <span class="note">Rack rate per rental day</span>
+    </div>
+    <div class="row">
+      <span class="label">Utilization</span>
+      <span class="ctrl"><input type="number" id="util" value="85" step="1" min="0" max="100"><span class="unit">%</span></span>
+      <span class="note">Used across the business model — single source of truth</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">Revenue per scooter / month</span>
+      <span><span class="computed key" id="revPerScooter">—</span><span class="unit"> ₹</span></span>
+      <span class="note">Days × Price × Utilization</span>
+    </div>
+    <div class="row">
+      <span class="label">Energy / battery swap</span>
+      <span class="ctrl"><input type="number" id="energy" value="2300" step="50"><span class="unit">₹</span></span>
+      <span class="note">Per scooter per month</span>
+    </div>
+    <div class="row">
+      <span class="label">Repairs &amp; maintenance</span>
+      <span class="ctrl"><input type="number" id="rm" value="500" step="50"><span class="unit">₹</span></span>
+      <span class="note">Per scooter per month</span>
+    </div>
+    <div class="row">
+      <span class="label">Hub fixed + ground ops</span>
+      <span class="ctrl"><input type="number" id="hub" value="850" step="50"><span class="unit">₹</span></span>
+      <span class="note">Per scooter per month</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">CM unlevered (pre-lease)</span>
+      <span><span class="computed key" id="cmUnlevered">—</span><span class="unit"> ₹</span></span>
+      <span class="note">Revenue − variable costs</span>
+    </div>
+    <div class="row">
+      <span class="label">Asset lease cost</span>
+      <span class="ctrl"><input type="number" id="lease" value="1850" step="50"><span class="unit">₹</span></span>
+      <span class="note">Paid to finco — operator's ₹15K equity, debt the rest</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">CM post-lease (operator)</span>
+      <span><span class="computed key" id="cmPostLease">—</span><span class="unit"> ₹</span></span>
+      <span class="note">What the operating company keeps</span>
+    </div>
+
+    <div class="sub-head">Asset &amp; financing assumptions</div>
+    <div class="row">
+      <span class="label">Asset life</span>
+      <span class="ctrl"><input type="number" id="assetLife" value="48" step="1" min="1"><span class="unit">months</span></span>
+      <span class="note">Total vehicle life — retires at end</span>
+    </div>
+    <div class="row">
+      <span class="label">Lease period</span>
+      <span class="ctrl"><input type="number" id="leasePeriod" value="32" step="1" min="1"><span class="unit">months</span></span>
+      <span class="note">Months 1–32 pay lease cost; months 33–48 are off-lease (pure CM)</span>
+    </div>
+    <div class="row">
+      <span class="label">Equity per new scooter</span>
+      <span class="ctrl"><input type="number" id="eqPerScooter" value="15000" step="1000"><span class="unit">₹</span></span>
+      <span class="note">Operator's down payment — depreciated over asset life</span>
+    </div>
+    <div class="row">
+      <span class="label">Salvage value at retirement</span>
+      <span class="ctrl"><input type="number" id="salvageValue" value="0" step="500" min="0"><span class="unit">₹</span></span>
+      <span class="note">Cash recovered per vehicle when scrapped at end of life</span>
+    </div>
+    <div class="row">
+      <span class="label">Tax rate</span>
+      <span class="ctrl"><input type="number" id="taxRate" value="22" step="1" min="0" max="100"><span class="unit">%</span></span>
+      <span class="note">Applied to PBT to get PAT</span>
+    </div>
+  </section>
+
+  <!-- ============== 02 BUSINESS MODEL ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <span class="section-title">Business model</span>
+      <span class="section-hint">edit closing fleet, cities, and HQ costs by year</span>
+    </div>
+    <table class="biz-table">
+      <thead>
+        <tr>
+          <th>(₹ Cr unless noted)</th>
+          <th>FY27</th><th>FY28</th><th>FY29</th><th>FY30</th><th>FY31</th>
+        </tr>
+      </thead>
+      <tbody id="bizBody">
+        <!-- rendered by JS -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============== 03 EXIT (RUN-RATE) ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <span class="section-title">Exit valuation — FY31 closing run-rate</span>
+      <span class="section-hint">annualised from final-month closing fleet</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">Exit-month closing fleet</span>
+      <span><span class="computed" id="exitFleet">—</span><span class="unit"> scooters</span></span>
+      <span class="note">FY31 closing fleet from §2</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">Annualised revenue (run-rate)</span>
+      <span><span class="computed key" id="rrRev">—</span><span class="unit"> ₹ Cr</span></span>
+      <span class="note">Exit fleet × monthly revenue × 12</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">Annualised PAT (run-rate)</span>
+      <span><span class="computed key" id="rrPat">—</span><span class="unit"> ₹ Cr</span></span>
+      <span class="note">From actual Mar-2031 fleet composition × (1 − tax rate)</span>
+    </div>
+    <div class="row">
+      <span class="label">Multiple type</span>
+      <span class="ctrl toggle-row">
+        <span class="pill-toggle">
+          <button id="mtPbt" class="active" type="button">PAT multiple</button>
+          <button id="mtRev" type="button">Revenue multiple</button>
+        </span>
+      </span>
+      <span class="note">Toggle between PAT × PE and Revenue × multiple</span>
+    </div>
+    <div class="row">
+      <span class="label">Exit multiple</span>
+      <span class="ctrl"><input type="number" id="mult" value="40" step="0.5"><span class="unit" id="multUnit">×</span></span>
+      <span class="note">PE for a profitable consumer mobility platform</span>
+    </div>
+    <div class="row is-section-key">
+      <span class="label key">Exit equity value</span>
+      <span><span class="computed key big" id="exitValueCr">—</span><span class="unit"> ₹ Cr</span></span>
+      <span class="note">Run-rate metric × multiple</span>
+    </div>
+    <div class="row">
+      <span class="label">Exit equity value ($M)</span>
+      <span><span class="computed" id="exitValueUsd">—</span><span class="unit"> $M</span></span>
+      <span class="note">Converted at the USD/INR rate set at top of page</span>
+    </div>
+  </section>
+
+  <!-- ============== 04 ROUNDS & OWNERSHIP ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <span class="section-title">Rounds &amp; ownership</span>
+      <span class="section-hint">Round 3 included; set its cheque to 0 if it doesn't happen</span>
+    </div>
+    <div class="rounds-grid">
+
+      <div class="round-card">
+        <div class="round-title">Round 1</div>
+        <div class="round-sub">Mid-2026 · ~8K scooters</div>
+        <div class="round-row"><span class="label">Round size</span><input type="number" id="r1Size" value="12" step="1"></div>
+        <div class="round-row"><span class="label">Nexus cheque</span><input type="number" id="r1Cheque" value="10" step="0.5"></div>
+        <div class="round-row"><span class="label">Post-money</span><input type="number" id="r1Post" value="50" step="5"></div>
+        <div class="round-row"><span class="label">Nexus stake</span><span class="computed" id="r1Stake">—</span></div>
+      </div>
+
+      <div class="round-card">
+        <div class="round-title">Round 2</div>
+        <div class="round-sub">Late FY28 · ~55K scooters</div>
+        <div class="round-row"><span class="label">Round size</span><input type="number" id="r2Size" value="35" step="5"></div>
+        <div class="round-row"><span class="label">Nexus cheque</span><input type="number" id="r2Cheque" value="7" step="0.5"></div>
+        <div class="round-row"><span class="label">Pre-money</span><input type="number" id="r2Pre" value="250" step="10"></div>
+        <div class="round-row"><span class="label">Post-money</span><span class="computed" id="r2Post">—</span></div>
+        <div class="round-row"><span class="label">Nexus stake</span><span class="computed" id="r2Stake">—</span></div>
+      </div>
+
+      <div class="round-card" id="r3Card">
+        <div class="round-title">Round 3 <span style="font-family:'Inter';font-size:10px;color:var(--clay);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-left:6px;">optional</span></div>
+        <div class="round-sub">FY30 · pre-IPO / growth — set cheque to 0 to skip</div>
+        <div class="round-row"><span class="label">Round size</span><input type="number" id="r3Size" value="60" step="5"></div>
+        <div class="round-row"><span class="label">Nexus cheque</span><input type="number" id="r3Cheque" value="0" step="0.5"></div>
+        <div class="round-row"><span class="label">Pre-money</span><input type="number" id="r3Pre" value="700" step="25"></div>
+        <div class="round-row"><span class="label">Post-money</span><span class="computed" id="r3Post">—</span></div>
+        <div class="round-row"><span class="label">Nexus stake</span><span class="computed" id="r3Stake">—</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============== 05 NEXUS RETURN ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <span class="section-title">Nexus return</span>
+    </div>
+    <div class="return-panel">
+      <div class="stat">
+        <div class="stat-label">Total invested</div>
+        <div class="stat-value"><span id="totalInvested">—</span><span style="font-family:'Inter';font-size:18px;opacity:.7;"> $M</span></div>
+        <div class="stat-sub">Sum of R1 + R2 + R3 cheques</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Exit proceeds</div>
+        <div class="stat-value"><span id="proceeds">—</span><span style="font-family:'Inter';font-size:18px;opacity:.7;"> $M</span></div>
+        <div class="stat-sub">Final stake × exit equity value</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Gross MOIC</div>
+        <div class="stat-value"><span id="moic">—</span><span style="font-family:'Inter';font-size:18px;opacity:.7;">×</span></div>
+        <div class="stat-sub" id="moicSub">Final stake: <span id="finalStake">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 05B BALANCE SHEET / CASH BRIDGE ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">05b</span>
+      <span class="section-title">Balance sheet — cash bridge</span>
+      <span class="section-hint">capex (fleet ₹15K/scooter equity) vs opex (G&A burn) vs round capital · monthly cohort math · ₹ Cr</span>
+    </div>
+
+    <div class="row" style="grid-template-columns: 280px 1fr 220px; padding: 6px 0 14px 0;">
+      <span class="label">Opening cash (Apr-26)</span>
+      <span class="ctrl"><input type="number" id="openCash" value="25" step="5"><span class="unit">₹ Cr</span></span>
+      <span class="note">Bank balance at start of FY27 — other asset assumptions in §1</span>
+    </div>
+
+    <table class="biz-table">
+      <thead>
+        <tr>
+          <th>(₹ Cr)</th>
+          <th>FY27</th><th>FY28</th><th>FY29</th><th>FY30</th><th>FY31</th>
+        </tr>
+      </thead>
+      <tbody id="bsBody">
+        <!-- rendered by JS -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============== 06 SENSITIVITY ============== -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <span class="section-title">Sensitivity — exit valuation</span>
+      <span class="section-hint">cell = company exit value · hover for Nexus stake + MOIC</span>
+    </div>
+    <div class="sens-wrap">
+      <table class="sens-table">
+        <thead>
+          <tr>
+            <th style="text-align:left; color:var(--muted); text-transform:none; letter-spacing:0; font-style:italic; font-weight:400; font-size:11px;">utilisation ↓ &nbsp; multiple →</th>
+            <th>20×</th><th>25×</th><th>30×</th><th>35×</th><th>40×</th><th>45×</th><th>50×</th>
+          </tr>
+        </thead>
+        <tbody id="sensBody">
+          <!-- rendered by JS -->
+        </tbody>
+      </table>
+    </div>
+    <div class="sens-legend">
+      <span>Heatmap by company exit value</span>
+      <span class="legend-bar"></span>
+      <span id="sensLegendRange">— · —</span>
+      <span style="margin-left:auto;">Multiple type follows the toggle in §3</span>
+    </div>
+  </section>
+
+  <div class="footer">
+    <strong>Notes.</strong> All numbers in INR Crores unless stated. USD conversion uses the rate set at the top of this page.
+    Exit valuation uses the FY31 <em>closing</em> fleet annualised (closing fleet × per-scooter revenue × 12), not the full-year average, to reflect run-rate value at the exit moment.
+    PAT is computed as run-rate PBT × (1 − tax rate) where PBT = CM post-lease − depreciation − FY31 HQ costs. Change §1 inputs to flex.
+    Set R3 cheque to 0 if no third round; the model handles round-skipping cleanly.
+    Final stake reflects sequential dilution through every round where new shares are issued.
+  </div>
+
+</div>
+
+<script>
+// =============================================================
+// State + defaults
+// =============================================================
+const fyKeys = ['FY27','FY28','FY29','FY30','FY31'];
+const closingDefaults = [30000, 75000, 125000, 200000, 300000];
+const citiesDefaults  = [4, 5, 6, 7, 9];
+const hqDefaults      = [62, 78, 96, 114, 132];      // Rs Cr/yr
+const openingFY27Default = 8072;
+
+// Number formatters
+const fmtInt = (n) => isFinite(n) ? Math.round(n).toLocaleString('en-IN') : '—';
+const fmtCr  = (n) => isFinite(n) ? Math.round(n).toLocaleString('en-IN') : '—';
+const fmtCr1 = (n) => isFinite(n) ? n.toLocaleString('en-IN',{maximumFractionDigits:1, minimumFractionDigits:1}) : '—';
+const fmtPct = (n) => isFinite(n) ? (n*100).toFixed(1) + '%' : '—';
+const fmtUsd = (n) => isFinite(n) ? '$' + n.toLocaleString('en-IN',{maximumFractionDigits:1, minimumFractionDigits:1}) : '—';
+const fmt1   = (n) => isFinite(n) ? n.toLocaleString('en-IN',{maximumFractionDigits:1, minimumFractionDigits:1}) : '—';
+
+// Build balance-sheet table
+function buildBalanceSheet() {
+  const tbody = document.getElementById('bsBody');
+  tbody.innerHTML = '';
+  const rows = [
+    {id:'bsOpen',    label:'Opening cash',                                kind:'value'},
+    {id:'bsPat',     label:'PAT (from §2)',                               kind:'value'},
+    {id:'bsDepAdd',  label:'+ Depreciation (non-cash add-back)',          kind:'value'},
+    {id:'bsRetire',  label:'Scooters retiring (end of asset life)',       kind:'value-int'},
+    {id:'bsGrossAdd',label:'Gross scooters added (net adds + replacements)', kind:'value-int'},
+    {id:'bsCapex',   label:'Capex (₹15K × gross adds)',                   kind:'value', neg:true},
+    {id:'bsSalvage', label:'Salvage value recovered',                     kind:'value'},
+    {id:'bsRound',   label:'Round capital raised',                        kind:'value'},
+    {id:'spacer',    kind:'divider'},
+    {id:'bsClose',   label:'Closing cash',                                kind:'value', key:true},
+    {id:'bsCum',     label:'Cumulative equity raised',                    kind:'value'},
+  ];
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    if (r.kind === 'divider') {
+      tr.className = 'divider';
+      const td = document.createElement('td');
+      td.colSpan = 6; td.style.padding = '0';
+      td.style.borderBottom = '1px solid var(--rule)';
+      td.style.height = '8px';
+      tr.appendChild(td); tbody.appendChild(tr); return;
+    }
+    if (r.key) tr.classList.add('key-row');
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'label' + (r.key ? ' key' : '');
+    tdLabel.textContent = r.label;
+    tr.appendChild(tdLabel);
+    for (let i = 0; i < 5; i++) {
+      const td = document.createElement('td');
+      td.className = 'value';
+      td.id = `${r.id}_${i}`;
+      td.textContent = '—';
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+// Build business-model table
+function buildBizTable() {
+  const tbody = document.getElementById('bizBody');
+  tbody.innerHTML = '';
+  const rows = [
+    {id:'opening', label:'Opening fleet', kind:'value-int', input:true},
+    {id:'closing', label:'Closing fleet', kind:'input-int', defaults:closingDefaults, key:true},
+    {id:'avg',     label:'Avg fleet',     kind:'value-int'},
+    {id:'avgOnLease',  label:'  · of which on lease (months 1–32)',  kind:'value-int'},
+    {id:'avgOffLease', label:'  · of which off lease (months 33–48)', kind:'value-int'},
+    {id:'cities',  label:'Cities',        kind:'input-int', defaults:citiesDefaults},
+    {id:'spacer1', kind:'divider'},
+    {id:'revenue', label:'Revenue',                 kind:'value-cr', key:true},
+    {id:'cmUnlev', label:'CM unlevered',            kind:'value-cr'},
+    {id:'lease',   label:'Lease cost (on-lease fleet only)', kind:'value-cr'},
+    {id:'cmPost',  label:'CM post-lease',           kind:'value-cr', key:true},
+    {id:'dep',     label:'Depreciation (₹15K / asset life)', kind:'value-cr'},
+    {id:'spacer2', kind:'divider'},
+    {id:'hq',      label:'HQ + corporate (G&A)',    kind:'input-cr', defaults:hqDefaults},
+    {id:'pbt',     label:'PBT (CM post-lease − dep − G&A)', kind:'value-cr'},
+    {id:'tax',     label:'Tax', kind:'value-cr'},
+    {id:'pat',     label:'PAT', kind:'value-cr', key:true},
+    {id:'patm',    label:'PAT margin',              kind:'value-pct'}
+  ];
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    if (r.kind === 'divider') {
+      tr.className = 'divider';
+      const td = document.createElement('td');
+      td.colSpan = 6;
+      td.style.padding = '0';
+      td.style.borderBottom = '1px solid var(--rule)';
+      td.style.height = '8px';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+    if (r.key) tr.classList.add('key-row');
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'label' + (r.key ? ' key' : '');
+    tdLabel.textContent = r.label;
+    tr.appendChild(tdLabel);
+    for (let i = 0; i < 5; i++) {
+      const td = document.createElement('td');
+      if (r.kind === 'input-int' || r.kind === 'input-cr') {
+        td.className = 'input-cell';
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.id = `${r.id}_${i}`;
+        inp.value = r.defaults[i];
+        inp.step = r.kind === 'input-cr' ? 1 : 100;
+        inp.addEventListener('input', recalc);
+        td.appendChild(inp);
+      } else {
+        td.className = 'value';
+        td.id = `${r.id}_${i}`;
+        td.textContent = '—';
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+// =============================================================
+// Recalculation engine
+// =============================================================
+function recalc() {
+  // ---- 1. Unit econ ----
+  const days = +document.getElementById('days').value || 0;
+  const price = +document.getElementById('price').value || 0;
+  const util = (+document.getElementById('util').value || 0) / 100;
+  const energy = +document.getElementById('energy').value || 0;
+  const rm = +document.getElementById('rm').value || 0;
+  const hub = +document.getElementById('hub').value || 0;
+  const lease = +document.getElementById('lease').value || 0;
+
+  const revPerScooter = days * price * util;
+  const cmUnlev = revPerScooter - energy - rm - hub;
+  const cmPost  = cmUnlev - lease;
+
+  document.getElementById('revPerScooter').textContent = fmtInt(revPerScooter);
+  document.getElementById('cmUnlevered').textContent   = fmtInt(cmUnlev);
+  document.getElementById('cmPostLease').textContent   = fmtInt(cmPost);
+
+  // ---- 2. Business model — month-by-month cohort tracking ----
+  // Each cohort = vehicles added in a particular month. Track every cohort's age
+  // through every month of the 5-year window. Lease cost applies only to vehicles
+  // in months 1..leasePeriod of their life. Depreciation applies to all vehicles
+  // in months 1..assetLifeMo. At month assetLifeMo+1, the vehicle retires.
+  const closings = [];
+  for (let i = 0; i < 5; i++) closings.push(+document.getElementById(`closing_${i}`).value || 0);
+  const hqVals = [];
+  for (let i = 0; i < 5; i++) hqVals.push(+document.getElementById(`hq_${i}`).value || 0);
+
+  const assetLifeMo = Math.max(1, +document.getElementById('assetLife').value || 48);
+  const leasePeriodMo = Math.max(1, +document.getElementById('leasePeriod').value || 32);
+  const legacyBuildRate = 1000;  // fixed at 1K/month — implies 8K legacy fleet built over ~8 months
+  const eqPerScNow = +document.getElementById('eqPerScooter').value || 0;
+  const taxRate = (+document.getElementById('taxRate').value || 0) / 100;
+  const depPerVehiclePerMonth = eqPerScNow / assetLifeMo;  // ₹/vehicle/month
+  const usdInr = Math.max(1, +document.getElementById('usdInr').value || 100);  // ₹ per $
+  const usdToCr = usdInr / 10;  // ₹ Cr per $M (since 1 Cr = 10M rupees, 1 $M = usdInr million rupees = usdInr/10 Cr)
+
+  // Cohorts: cohort[age] tells us how many vehicles were added with that "age at start of FY27 month 1"
+  // We build a single timeline of 60 months (FY27 month 1 to FY31 month 12).
+  // For each month t in [1..60], we know what cohort fleet is alive at that point.
+  // 
+  // Implementation: cohorts is a Map keyed by "addition month" (negative for legacy).
+  //   - Legacy fleet: 8 cohorts added at months -7, -6, ..., 0 (1K vehicles each = 8,000 ≈ 8,072)
+  //     More precisely: ceil(8072 / 1000) = 9 monthly batches. We distribute 8072 across these.
+  //   - New cohorts: vehicles added in months 1..60, linearly within each FY based on closing fleet target.
+  
+  // Build legacy cohorts
+  const legacyCohorts = [];  // [{addMonth, count}]
+  const legacyTotal = openingFY27Default;
+  const fullBatches = Math.floor(legacyTotal / legacyBuildRate);
+  const remainder = legacyTotal - fullBatches * legacyBuildRate;
+  // Most recent legacy batch is at month 0 (just before FY27 month 1)
+  // Earliest is at month -(fullBatches) if remainder > 0, else -(fullBatches-1)
+  if (remainder > 0) {
+    legacyCohorts.push({ addMonth: -fullBatches, count: remainder });
+  }
+  for (let k = fullBatches - 1; k >= 0; k--) {
+    legacyCohorts.push({ addMonth: -k, count: legacyBuildRate });
+  }
+  // Now legacyCohorts has cohorts with addMonth in [-fullBatches, 0]
+  // Their ages at start of FY27 month 1 are 1 to fullBatches+1 months
+
+  // Build new cohort additions month by month, linear ramp within each FY.
+  // We need to determine how many vehicles to ADD in each month of FY27..FY31
+  // such that closing fleet at end of each FY matches target.
+  // Strategy: within each FY, linearly ramp from previous closing to target closing.
+  //   monthly additions in FY (across 12 months) = (target - prior_closing + retirements_in_year) / 12
+  //   But retirements happen at specific months (month 48 of life), so we need to solve iteratively.
+  //   Simpler: track the running fleet by month, and at start of each FY, compute the constant
+  //   monthly add rate that hits the target closing, given the retirement schedule.
+  
+  // Build new cohorts. addMonth ranges from 1 to 60.
+  const newCohorts = [];  // [{addMonth, count}]
+  
+  // Fleet present at time t = sum over all cohorts where addMonth <= t and addMonth + assetLifeMo > t
+  // For simplicity, compute month-by-month, deriving monthly adds for each FY.
+  
+  // First, build legacy retirements timeline: for each legacy cohort, it retires at month (addMonth + assetLifeMo).
+  // We'll compute the entire 60-month fleet trajectory iteratively.
+  
+  // Step 1: For each FY (5 FYs, months 1-12, 13-24, ..., 49-60), compute monthly adds.
+  //   Let prevClose = openingFY27Default at start of FY27
+  //   For FY i, target = closings[i], and we need monthlyAdds such that
+  //     prevClose + 12 * monthlyAdds - retirements_in_FY = target
+  //   Retirements in FY depend on which cohorts retire in that FY (cohorts with addMonth+assetLifeMo within FY months)
+  
+  // Helper: compute retirements between month tStart..tEnd inclusive, given all cohorts added so far
+  function retireBetween(cohorts, tStart, tEnd) {
+    let total = 0;
+    for (const c of cohorts) {
+      const retireMonth = c.addMonth + assetLifeMo;
+      if (retireMonth >= tStart && retireMonth <= tEnd) total += c.count;
+    }
+    return total;
+  }
+  
+  let prevClose = openingFY27Default;
+  const monthlyAddByMonth = new Array(61).fill(0); // index 1..60
+  const allCohortsAccum = [...legacyCohorts]; // running list
+  
+  for (let fy = 0; fy < 5; fy++) {
+    const fyStart = fy * 12 + 1;
+    const fyEnd = fy * 12 + 12;
+    // Retirements in this FY (from cohorts added before this FY)
+    const retiresThisFy = retireBetween(allCohortsAccum, fyStart, fyEnd);
+    // Net adds needed: target - prevClose + retirements
+    const netAddsThisFy = closings[fy] - prevClose + retiresThisFy;
+    // Linear ramp: distribute across 12 months
+    const perMonth = netAddsThisFy / 12;
+    for (let m = fyStart; m <= fyEnd; m++) {
+      monthlyAddByMonth[m] = perMonth;
+      newCohorts.push({ addMonth: m, count: perMonth });
+      allCohortsAccum.push({ addMonth: m, count: perMonth });
+    }
+    prevClose = closings[fy];
+  }
+  
+  // Now compute fleet metrics for each month t in [1..60]:
+  //   totalFleet(t) = sum of cohort counts where addMonth <= t and addMonth + assetLifeMo > t-1
+  //   onLeaseFleet(t) = sum where age at month t (= t - addMonth + 1) is in [1..leasePeriodMo]
+  //   offLeaseFleet(t) = sum where age in [leasePeriodMo+1..assetLifeMo]
+  // 
+  // Vehicle "age at month t" if added in month a is (t - a + 1) — i.e., added in month a counts as age 1 in month a.
+  // Vehicle is alive (productive) during months a, a+1, ..., a + assetLifeMo - 1.
+  // It retires (no longer counted) at month a + assetLifeMo.
+  
+  function fleetAtMonth(t, type) {
+    // type: 'total' | 'onLease' | 'offLease'
+    let total = 0;
+    for (const c of allCohortsAccum) {
+      const age = t - c.addMonth + 1;  // 1 = just added this month
+      if (age < 1 || age > assetLifeMo) continue;  // not alive
+      if (type === 'total') total += c.count;
+      else if (type === 'onLease' && age <= leasePeriodMo) total += c.count;
+      else if (type === 'offLease' && age > leasePeriodMo) total += c.count;
+    }
+    return total;
+  }
+
+  // For each FY, compute:
+  //   avgTotalFleet = average of monthly total fleet over the 12 months
+  //   avgOnLeaseFleet = average of monthly on-lease fleet over the 12 months
+  //   avgOffLeaseFleet = average of monthly off-lease fleet over the 12 months
+  //   Revenue = sum over 12 months of (totalFleet × revPerScooter)
+  //   Lease cost = sum over 12 months of (onLeaseFleet × lease)
+  //   Variable costs scale with total fleet
+  //   Depreciation = sum over 12 months of (totalFleet × depPerVehiclePerMonth)
+  
+  const fyMetrics = [];  // for each FY: {opening, closing, avgTotal, avgOnLease, avgOffLease, revenue, cmU, leaseCr, cmP, depCr, pbt, tax, pat, patMargin}
+  
+  for (let fy = 0; fy < 5; fy++) {
+    const fyStart = fy * 12 + 1;
+    const fyEnd = fy * 12 + 12;
+    let sumTotal = 0, sumOnLease = 0, sumOffLease = 0;
+    let monthRevenue = 0, monthVarCost = 0, monthLeaseCost = 0, monthDep = 0;
+    for (let t = fyStart; t <= fyEnd; t++) {
+      const tot = fleetAtMonth(t, 'total');
+      const onL = fleetAtMonth(t, 'onLease');
+      const offL = fleetAtMonth(t, 'offLease');
+      sumTotal += tot;
+      sumOnLease += onL;
+      sumOffLease += offL;
+      monthRevenue += tot * revPerScooter;
+      monthVarCost += tot * (energy + rm + hub);
+      monthLeaseCost += onL * lease;
+      monthDep += tot * depPerVehiclePerMonth;
+    }
+    const opening = fy === 0 ? openingFY27Default : closings[fy - 1];
+    const closing = closings[fy];
+    const avgTotal = sumTotal / 12;
+    const avgOnLease = sumOnLease / 12;
+    const avgOffLease = sumOffLease / 12;
+    const revenueCr = monthRevenue / 1e7;
+    const varCostCr = monthVarCost / 1e7;
+    const cmU = revenueCr - varCostCr;
+    const leaseCr = monthLeaseCost / 1e7;
+    const cmP = cmU - leaseCr;
+    const depCr = monthDep / 1e7;
+    const pbt = cmP - depCr - hqVals[fy];
+    const tax = pbt > 0 ? pbt * taxRate : 0;  // no tax on losses (no carry-forward modelled)
+    const pat = pbt - tax;
+    const patMargin = revenueCr > 0 ? pat / revenueCr : 0;
+    fyMetrics.push({
+      opening, closing,
+      avgTotal, avgOnLease, avgOffLease,
+      revenue: revenueCr, cmU, leaseCr, cmP, depCr, pbt, tax, pat, patMargin
+    });
+  }
+
+  // Render to table
+  for (let i = 0; i < 5; i++) {
+    const m = fyMetrics[i];
+    document.getElementById(`opening_${i}`).textContent = fmtInt(m.opening);
+    document.getElementById(`avg_${i}`).textContent     = fmtInt(m.avgTotal);
+    document.getElementById(`avgOnLease_${i}`).textContent  = fmtInt(m.avgOnLease);
+    document.getElementById(`avgOffLease_${i}`).textContent = fmtInt(m.avgOffLease);
+    document.getElementById(`revenue_${i}`).textContent = fmtCr(m.revenue);
+    document.getElementById(`cmUnlev_${i}`).textContent = fmtCr(m.cmU);
+    document.getElementById(`lease_${i}`).textContent   = fmtCr(m.leaseCr);
+    document.getElementById(`cmPost_${i}`).textContent  = fmtCr(m.cmP);
+    document.getElementById(`dep_${i}`).textContent     = fmtCr(m.depCr);
+    document.getElementById(`pbt_${i}`).textContent     = fmtCr(m.pbt);
+    document.getElementById(`tax_${i}`).textContent     = m.tax > 0 ? '(' + fmtCr(m.tax) + ')' : '—';
+    document.getElementById(`pat_${i}`).textContent     = fmtCr(m.pat);
+    document.getElementById(`patm_${i}`).textContent    = fmtPct(m.patMargin);
+
+    // colour negative PAT in clay (key row now)
+    const patRow = document.getElementById(`pat_${i}`).parentElement;
+    if (m.pat < 0) patRow.classList.add('negative'); else patRow.classList.remove('negative');
+  }
+
+  // ---- 3. Exit run-rate (deterministic: actual fleet composition at March 31, 2031) ----
+  // Take the month-60 snapshot from the cohort tracking and annualise it.
+  // Lease cost applies only to the actual on-lease count at month 60 (not steady-state ratio).
+  // Depreciation applies to total alive fleet at month 60. Tax applied to positive PBT.
+  const exitFleet = closings[4];
+  const onLeaseAtExit = fleetAtMonth(60, 'onLease');
+  const offLeaseAtExit = fleetAtMonth(60, 'offLease');
+  const rrRev = exitFleet * revPerScooter * 12 / 1e7;
+  const rrVarCost = exitFleet * (energy + rm + hub) * 12 / 1e7;
+  const rrLease = onLeaseAtExit * lease * 12 / 1e7;
+  const rrCmPost = rrRev - rrVarCost - rrLease;
+  const rrDep = exitFleet * depPerVehiclePerMonth * 12 / 1e7;
+  const rrPbt = rrCmPost - rrDep - hqVals[4];
+  const rrPat = rrPbt > 0 ? rrPbt * (1 - taxRate) : rrPbt;
+
+  document.getElementById('exitFleet').textContent = fmtInt(exitFleet);
+  document.getElementById('rrRev').textContent     = fmtCr(rrRev);
+  document.getElementById('rrPat').textContent     = fmtCr(rrPat);
+
+  // ---- Exit multiple ----
+  const mult = +document.getElementById('mult').value || 0;
+  const usePat = document.getElementById('mtPbt').classList.contains('active');  // toggle ID kept as mtPbt for stability; now means PAT
+  const exitCr = usePat ? rrPat * mult : rrRev * mult;
+  const exitUsd = exitCr / usdToCr;
+
+  document.getElementById('exitValueCr').textContent  = fmtCr(exitCr);
+  document.getElementById('exitValueUsd').textContent = fmtUsd(exitUsd);
+
+  // ---- 4. Rounds & ownership ----
+  const r1Cheque = +document.getElementById('r1Cheque').value || 0;
+  const r1Post   = +document.getElementById('r1Post').value || 0;
+  const r1Stake  = r1Post > 0 ? r1Cheque / r1Post : 0;
+
+  const r2Size   = +document.getElementById('r2Size').value || 0;
+  const r2Cheque = +document.getElementById('r2Cheque').value || 0;
+  const r2Pre    = +document.getElementById('r2Pre').value || 0;
+  const r2Post   = r2Pre + r2Size;
+  const r2Stake  = r2Post > 0 ? r1Stake * (r2Pre / r2Post) + r2Cheque / r2Post : r1Stake;
+
+  const r3Size   = +document.getElementById('r3Size').value || 0;
+  const r3Cheque = +document.getElementById('r3Cheque').value || 0;
+  const r3Pre    = +document.getElementById('r3Pre').value || 0;
+  const r3Post   = r3Pre + r3Size;
+  // If R3 size = 0, treat as no round (no dilution)
+  const r3Active = r3Size > 0;
+  const r3Stake  = r3Active && r3Post > 0
+    ? r2Stake * (r3Pre / r3Post) + r3Cheque / r3Post
+    : r2Stake;
+
+  document.getElementById('r1Stake').textContent = fmtPct(r1Stake);
+  document.getElementById('r2Post').textContent  = fmtUsd(r2Post);
+  document.getElementById('r2Stake').textContent = fmtPct(r2Stake);
+  document.getElementById('r3Post').textContent  = fmtUsd(r3Post);
+  document.getElementById('r3Stake').textContent = fmtPct(r3Stake);
+
+  const r3Card = document.getElementById('r3Card');
+  if (!r3Active) r3Card.classList.add('muted'); else r3Card.classList.remove('muted');
+
+  // ---- 5. Returns ----
+  const finalStake = r3Stake;
+  const totalInvested = r1Cheque + r2Cheque + r3Cheque;
+  const proceeds = finalStake * exitUsd;
+  const moic = totalInvested > 0 ? proceeds / totalInvested : 0;
+
+  document.getElementById('totalInvested').textContent = fmt1(totalInvested);
+  document.getElementById('proceeds').textContent      = fmt1(proceeds);
+  document.getElementById('moic').textContent          = fmt1(moic);
+  document.getElementById('finalStake').textContent    = fmtPct(finalStake);
+
+  // ---- 5b. Balance sheet / cash bridge ----
+  // Uses the same monthly cohort tracking from Section 2.
+  // Capex = gross adds × eqPerScooter (cash outflow at time of addition).
+  // Salvage = retirements × salvageValue (cash inflow at retirement). No refund — equity is a down payment.
+  // Depreciation is added back to PBT (non-cash).
+  const eqPerSc = +document.getElementById('eqPerScooter').value || 0;
+  const openCashCr = +document.getElementById('openCash').value || 0;
+  const salvageVal = +document.getElementById('salvageValue').value || 0;
+  // usdToCr derived from usdInr at the top of recalc
+
+  // Round capital in INR Cr (full round, not just Nexus cheque)
+  const r1SizeCr = (+document.getElementById('r1Size').value || 0) * usdToCr;
+  const r2SizeCr = (+document.getElementById('r2Size').value || 0) * usdToCr;
+  const r3SizeCr = (+document.getElementById('r3Size').value || 0) * usdToCr;
+  const roundByFy = [r1SizeCr, 0, r2SizeCr, 0, r3SizeCr];
+
+  // Compute gross adds and retirements per FY from the cohort timeline already built
+  const retireByFy = [0, 0, 0, 0, 0];
+  const grossAddByFy = [0, 0, 0, 0, 0];
+  for (let fy = 0; fy < 5; fy++) {
+    const fyStart = fy * 12 + 1;
+    const fyEnd = fy * 12 + 12;
+    // Retirements: cohorts that retire in months fyStart..fyEnd
+    for (const c of allCohortsAccum) {
+      const retireMonth = c.addMonth + assetLifeMo;
+      if (retireMonth >= fyStart && retireMonth <= fyEnd) {
+        retireByFy[fy] += c.count;
+      }
+    }
+    // Gross adds: monthly additions in this FY
+    for (let m = fyStart; m <= fyEnd; m++) {
+      grossAddByFy[fy] += monthlyAddByMonth[m];
+    }
+  }
+
+  // Capex and salvage per FY
+  const capexByFy = grossAddByFy.map(g => g * eqPerSc / 1e7);
+  const salvageByFy = retireByFy.map(r => r * salvageVal / 1e7);
+
+  // Walk cash bridge — starts from PAT (after-tax earnings)
+  let cash = openCashCr;
+  let cumRaised = 0;
+  for (let i = 0; i < 5; i++) {
+    const open = cash;
+    const pat = fyMetrics[i].pat;
+    const depAdd = fyMetrics[i].depCr;  // non-cash add-back
+    const capex = capexByFy[i];
+    const salvage = salvageByFy[i];
+    const round = roundByFy[i];
+    const close = open + pat + depAdd - capex + salvage + round;
+    cumRaised += round;
+
+    document.getElementById(`bsOpen_${i}`).textContent     = fmtCr(open);
+    document.getElementById(`bsPat_${i}`).textContent      = fmtCr(pat);
+    document.getElementById(`bsDepAdd_${i}`).textContent   = fmtCr(depAdd);
+    document.getElementById(`bsRetire_${i}`).textContent   = retireByFy[i] > 0 ? '(' + fmtInt(retireByFy[i]) + ')' : '—';
+    document.getElementById(`bsGrossAdd_${i}`).textContent = fmtInt(grossAddByFy[i]);
+    document.getElementById(`bsCapex_${i}`).textContent    = '(' + fmtCr(capex) + ')';
+    document.getElementById(`bsSalvage_${i}`).textContent  = salvage > 0 ? fmtCr(salvage) : '—';
+    document.getElementById(`bsRound_${i}`).textContent    = round > 0 ? fmtCr(round) : '—';
+    document.getElementById(`bsClose_${i}`).textContent    = fmtCr(close);
+    document.getElementById(`bsCum_${i}`).textContent      = fmtCr(cumRaised);
+
+    const closeCell = document.getElementById(`bsClose_${i}`);
+    closeCell.style.color = close < 0 ? 'var(--clay)' : '';
+    closeCell.style.fontWeight = '600';
+
+    const patCell = document.getElementById(`bsPat_${i}`);
+    patCell.style.color = pat < 0 ? 'var(--clay)' : '';
+
+    const retireCell = document.getElementById(`bsRetire_${i}`);
+    retireCell.style.color = retireByFy[i] > 0 ? 'var(--muted)' : '';
+
+    cash = close;
+  }
+
+  // ---- 6. Sensitivity table ----
+  renderSensitivity({
+    days, price, energy, rm, hub, lease,
+    exitFleet, hqFY31: hqVals[4],
+    onLeaseAtExit, depPerVehiclePerMonth, taxRate,
+    usdToCr,
+    usePat, finalStake, totalInvested
+  });
+}
+
+// =============================================================
+// Sensitivity table
+// =============================================================
+const SENS_UTILS = [75, 77.5, 80, 82.5, 85, 87.5, 90];
+const SENS_MULTS = [20, 25, 30, 35, 40, 45, 50];
+
+function computeOutcome(utilPct, mult, ctx) {
+  const util = utilPct / 100;
+  const revPer = ctx.days * ctx.price * util;
+  // Run-rate from actual end-of-FY31 fleet composition (deterministic, not steady-state).
+  // Utilisation flexes only revenue; var costs, lease, depreciation are independent of util.
+  const rrRev = ctx.exitFleet * revPer * 12 / 1e7;
+  const rrVarCost = ctx.exitFleet * (ctx.energy + ctx.rm + ctx.hub) * 12 / 1e7;
+  const rrLease = ctx.onLeaseAtExit * ctx.lease * 12 / 1e7;
+  const rrCmP = rrRev - rrVarCost - rrLease;
+  const rrDep = ctx.exitFleet * ctx.depPerVehiclePerMonth * 12 / 1e7;
+  const rrPbt = rrCmP - rrDep - ctx.hqFY31;
+  const rrPat = rrPbt > 0 ? rrPbt * (1 - ctx.taxRate) : rrPbt;
+  const metric = ctx.usePat ? rrPat : rrRev;
+  const exitCr = metric * mult;
+  const exitUsd = exitCr / ctx.usdToCr;
+  const proceeds = ctx.finalStake * exitUsd;
+  const moic = ctx.totalInvested > 0 ? proceeds / ctx.totalInvested : 0;
+  return { exitUsd, proceeds, moic };
+}
+
+// teal-clay gradient heatmap colour from a normalised value (0..1)
+function heatColour(t) {
+  // Clamp
+  t = Math.max(0, Math.min(1, t));
+  // Pale paper -> mid teal -> deep teal
+  if (t < 0.35) {
+    // pale cream → muted teal-grey
+    const k = t / 0.35;
+    const h = 38 + (170 - 38) * k;
+    const s = 36 + (18 - 36) * k;
+    const l = 92 + (75 - 92) * k;
+    return `hsl(${h}, ${s}%, ${l}%)`;
+  } else if (t < 0.70) {
+    // muted teal → vivid teal
+    const k = (t - 0.35) / 0.35;
+    const h = 170 + (174 - 170) * k;
+    const s = 18 + (38 - 18) * k;
+    const l = 75 + (45 - 75) * k;
+    return `hsl(${h}, ${s}%, ${l}%)`;
+  } else {
+    const k = (t - 0.70) / 0.30;
+    const h = 174;
+    const s = 38 + (55 - 38) * k;
+    const l = 45 + (25 - 45) * k;
+    return `hsl(${h}, ${s}%, ${l}%)`;
+  }
+}
+
+function fmtUsdM(n) {
+  if (!isFinite(n)) return '—';
+  if (Math.abs(n) >= 1000) return '$' + (n/1000).toLocaleString('en-IN', {maximumFractionDigits:2, minimumFractionDigits:1}) + 'b';
+  return '$' + Math.round(n).toLocaleString('en-IN') + 'm';
+}
+
+function renderSensitivity(ctx) {
+  const tbody = document.getElementById('sensBody');
+  tbody.innerHTML = '';
+
+  // First pass — compute all outcomes
+  const grid = [];
+  let minVal = Infinity, maxVal = -Infinity;
+  for (const u of SENS_UTILS) {
+    const row = [];
+    for (const m of SENS_MULTS) {
+      const out = computeOutcome(u, m, ctx);
+      row.push(out);
+      if (out.exitUsd < minVal) minVal = out.exitUsd;
+      if (out.exitUsd > maxVal) maxVal = out.exitUsd;
+    }
+    grid.push(row);
+  }
+
+  // Render rows
+  SENS_UTILS.forEach((u, i) => {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    th.textContent = u + '%';
+    tr.appendChild(th);
+
+    SENS_MULTS.forEach((m, j) => {
+      const out = grid[i][j];
+      const td = document.createElement('td');
+      td.className = 'sens-cell';
+      const t = maxVal > minVal ? (out.exitUsd - minVal) / (maxVal - minVal) : 0.5;
+      td.style.background = heatColour(t);
+      // Dark text on dark cells, ink text on light cells
+      td.style.color = t > 0.65 ? '#F5F2EC' : 'var(--ink)';
+      td.textContent = '';  // clear before adding children
+      const valSpan = document.createElement('span');
+      valSpan.textContent = fmtUsdM(out.exitUsd);
+      td.appendChild(valSpan);
+
+      const tip = document.createElement('div');
+      tip.className = 'sens-tip';
+      const moicStr = isFinite(out.moic) ? out.moic.toFixed(1) + '×' : '—';
+      tip.innerHTML =
+        `<div><span class="tip-label">Company</span><span class="tip-val">${fmtUsdM(out.exitUsd)}</span></div>` +
+        `<div><span class="tip-label">Nexus</span><span class="tip-val">${fmtUsdM(out.proceeds)}</span></div>` +
+        `<div><span class="tip-label">MOIC</span><span class="tip-val">${moicStr}</span></div>`;
+      td.appendChild(tip);
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('sensLegendRange').textContent =
+    `${fmtUsdM(minVal)} · ${fmtUsdM(maxVal)}`;
+}
+
+// =============================================================
+// Wire up
+// =============================================================
+function init() {
+  buildBizTable();
+  buildBalanceSheet();
+  // Attach listeners to unit-econ, exit, rounds, and balance-sheet inputs
+  ['days','price','util','energy','rm','hub','lease','mult',
+   'r1Size','r1Cheque','r1Post','r2Size','r2Cheque','r2Pre',
+   'r3Size','r3Cheque','r3Pre',
+   'eqPerScooter','openCash','assetLife','leasePeriod','salvageValue','taxRate','usdInr'].forEach(id => {
+    document.getElementById(id).addEventListener('input', recalc);
+  });
+  // Multiple type toggle
+  const mtPbt = document.getElementById('mtPbt');
+  const mtRev = document.getElementById('mtRev');
+  mtPbt.addEventListener('click', () => {
+    mtPbt.classList.add('active'); mtRev.classList.remove('active');
+    document.getElementById('mult').value = 25;
+    recalc();
+  });
+  mtRev.addEventListener('click', () => {
+    mtRev.classList.add('active'); mtPbt.classList.remove('active');
+    document.getElementById('mult').value = 5;
+    recalc();
+  });
+  recalc();
+}
+init();
+</script>
+</body>
+</html>
