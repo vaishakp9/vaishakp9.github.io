@@ -407,7 +407,16 @@
           <input type="number" id="vac" value="9.5" step="0.5" />
           <span class="suffix">days</span>
         </div>
-        <div class="input-hint">9.5 days current; 60 days max cap</div>
+        <div class="input-hint">9.5 days current avg.</div>
+      </div>
+      
+      <div class="input-group">
+        <label>Max vacancy Helium covers</label>
+        <div class="input-wrap">
+          <input type="number" id="vacCap" value="60" step="5" />
+          <span class="suffix">days</span>
+        </div>
+        <div class="input-hint">Beyond this, owner bears the cost. 60 today; ~30 with brand leverage.</div>
       </div>
       
       <div class="input-group">
@@ -563,6 +572,8 @@
     const stay = val('stay');
     const stayYrs = stay / 12;
     const vac = val('vac');
+    const vacCap = val('vacCap');
+    const effVac = Math.min(vac, vacCap);  // Helium's actual exposure per turnover
     const ops = val('ops');
     const dcac = val('dcac');
     const scac = val('scac');
@@ -610,7 +621,7 @@
     const tenantRevByYear = tenantTxnsByYear.map((t, i) => t * rentByYear[i] * tenantBrk);
     const grossRevByYear = ownerRevByYear.map((o, i) => o + tenantRevByYear[i]);
     const netRevByYear = grossRevByYear.map(g => g / (1+gst));
-    const vacCostByYear = tenantTxnsByYear.map((t, i) => t * rentByYear[i] * (vac/30));
+    const vacCostByYear = tenantTxnsByYear.map((t, i) => t * rentByYear[i] * (effVac/30));
     const opsCostByYear = tenantTxnsByYear.map(t => t * ops);
     const sCACByYear = newHomesByYear.map(n => n * scac);
     const dCACByYear = tenantTxnsByYear.map(t => t * dcac);
@@ -626,13 +637,13 @@
     const tenantRevPerHome = rent * tenantBrk * tenantCycles;
     const totalRevPerHome = ownerRevPerHome + tenantRevPerHome;
     const netRevPerHome = totalRevPerHome / (1+gst);
-    const vacCostPerHome = rent * (vac/30) * tenantCycles;
+    const vacCostPerHome = rent * (effVac/30) * tenantCycles;
     const opsCostPerHome = ops * tenantCycles;
     const cm1PerHome = netRevPerHome - vacCostPerHome - opsCostPerHome;
     const totalCAC = scac + dcac * tenantCycles;
     const cm2PerHome = cm1PerHome - totalCAC;
     
-    const monthlyNetContrib = (rent * ownerFee) / (1+gst) - (ops / stay) - (rent * (vac/30) / stay);
+    const monthlyNetContrib = (rent * ownerFee) / (1+gst) - (ops / stay) - (rent * (effVac/30) / stay);
     const initialOutlay = scac + dcac;
     const paybackMo = monthlyNetContrib > 0 ? initialOutlay / monthlyNetContrib : Infinity;
     const ltvCac = totalCAC > 0 ? cm1PerHome / totalCAC : 0;
@@ -644,7 +655,7 @@
       gmByYear, cm1ByYear, cm2ByYear,
       effLife, tenantCycles, totalRevPerHome, netRevPerHome,
       vacCostPerHome, opsCostPerHome, cm1PerHome, totalCAC, cm2PerHome,
-      paybackMo, ltvCac, scac, dcac, vac, rent, ownerFee, tenantBrk,
+      paybackMo, ltvCac, scac, dcac, vac, vacCap, rent, ownerFee, tenantBrk,
       stayYrs, ops, gst
     };
   }
@@ -725,45 +736,59 @@
   }
   
   function renderSensitivity(c) {
-    const mults = [0.5, 1.0, 2.0, 4.0, 60/c.vac];
-    const labels = ['Half base', 'Base case', '2× base', '4× base', '60-day max cap'];
+    // Stress test actual vacancy days; Helium's exposure is capped at vacCap.
+    // Anything beyond cap is the owner's problem (not Helium's CM2 hit) — 
+    // but high vacancy still hurts via lost owner-fee revenue (already in netRev).
+    const scenarios = [
+      { label: 'Half base', vac: c.vac * 0.5 },
+      { label: 'Base case', vac: c.vac },
+      { label: '2× base', vac: c.vac * 2 },
+      { label: '4× base', vac: c.vac * 4 },
+      { label: 'At cap (' + c.vacCap + ' days)', vac: c.vacCap },
+      { label: 'Beyond cap (2× cap)', vac: c.vacCap * 2 }
+    ];
     
-    const rows = mults.map((m, idx) => {
-      const sVac = c.vac * m;
+    const rows = scenarios.map((s, idx) => {
+      const sVac = s.vac;
+      const heliumExposure = Math.min(sVac, c.vacCap);
       const cycles = c.effLife / c.stayYrs;
       const ownerR = c.rent * 12 * c.ownerFee * c.effLife;
       const tenantR = c.rent * c.tenantBrk * cycles;
       const netR = (ownerR + tenantR) / (1+c.gst);
-      const vacC = c.rent * (sVac/30) * cycles;
+      const vacC = c.rent * (heliumExposure/30) * cycles;
       const opsC = c.ops * cycles;
       const cac = c.scac + c.dcac * cycles;
       const cm2 = netR - vacC - opsC - cac;
-      return { label: labels[idx], vac: sVac, cm2, cm2Pct: cm2/netR, isBase: idx === 1 };
+      const capped = sVac > c.vacCap;
+      return { label: s.label, vac: sVac, exposure: heliumExposure, cm2, cm2Pct: cm2/netR, isBase: idx === 1, capped };
     });
     
     let html = `<thead><tr>
-      <th>Scenario</th><th>Vacancy</th><th>CM2</th><th>CM2 %</th>
+      <th>Scenario</th><th>Vacancy</th><th>Helium pays</th><th>CM2</th>
     </tr></thead><tbody>`;
     html += rows.map(s => `
       <tr class="${s.isBase ? 'base' : ''}">
         <td>${s.label}</td>
-        <td>${s.vac.toFixed(1)} days</td>
+        <td>${s.vac.toFixed(1)} d</td>
+        <td>${s.exposure.toFixed(1)} d${s.capped ? ' <span style="color:#A04545;font-size:10px">(capped)</span>' : ''}</td>
         <td class="${s.cm2 > 0 ? 'pos' : 'neg'}">${fmtINR(s.cm2)}</td>
-        <td>${fmtPct(s.cm2Pct)}</td>
       </tr>
     `).join('');
     html += '</tbody>';
     $('sens').innerHTML = html;
     
     const baseCM2 = rows[1].cm2;
-    const maxCapCM2 = rows[4].cm2;
+    const atCapCM2 = rows[4].cm2;
+    const beyondCapCM2 = rows[5].cm2;
     let note = '';
-    if (baseCM2 > 0 && maxCapCM2 < 0) {
-      note = 'Vacancy is the load-bearing input. At the 60-day max cap, lifetime CM2 turns negative — the business depends on holding sub-15-day average vacancy that the visual AI engine is meant to deliver.';
-    } else if (baseCM2 > 0 && maxCapCM2 > 0) {
-      note = 'Even at the 60-day max cap, lifetime CM2 stays positive — robust at current input levels. Other risks (CAC, churn, supply growth) matter more here.';
+    if (c.vacCap <= 30) {
+      note = `With a ${c.vacCap}-day Helium-side cap (tighter than the 60-day deck default), unit economics are insulated from operational tail risk. Owner takes the hit beyond ${c.vacCap} days — this is the kind of term you'd get with brand leverage. CM2 stays at ${fmtINR(atCapCM2)} even if avg vacancy doubles to the cap.`;
+    } else if (baseCM2 > 0 && atCapCM2 < 0) {
+      note = `Vacancy is load-bearing. At the ${c.vacCap}-day cap, lifetime CM2 turns negative. Beyond cap, Helium's CM2 doesn't worsen further (owner absorbs the rest) — but quality of service likely collapses well before that point.`;
+    } else if (baseCM2 > 0 && atCapCM2 > 0) {
+      note = `Even at the ${c.vacCap}-day cap, lifetime CM2 stays positive. Beyond cap, Helium's exposure plateaus (owner takes excess) — the cap is doing real economic work here.`;
     } else {
-      note = 'Base case lifetime CM2 is already weak. Pull on owner fee, demand CAC, or tenant stay to improve.';
+      note = 'Base case lifetime CM2 is already weak. Pull on owner fee, CAC, or tenant stay to improve.';
     }
     $('sens-note').textContent = note;
   }
