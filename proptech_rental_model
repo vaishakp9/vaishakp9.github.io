@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helium Homes · 5-Year Financial Model</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", sans-serif;
+    background: #F0EDE6;
+    color: #0F2422;
+    min-height: 100vh;
+    padding: 32px 28px;
+    font-feature-settings: 'tnum' 1;
+  }
+  .container { max-width: 1440px; margin: 0 auto; }
+  
+  .header { margin-bottom: 28px; }
+  .header .eyebrow {
+    font-size: 10px; color: #5C6B6A;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .header h1 {
+    font-size: 36px; font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+  .header .sub {
+    font-size: 14px; color: #5C6B6A; margin-top: 6px;
+  }
+  
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 1100px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static !important; }
+  }
+  
+  .sidebar {
+    background: #FFFFFF;
+    border-radius: 10px;
+    padding: 20px;
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+    border: 1px solid #DDE4E2;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+  }
+  .sidebar-title {
+    font-size: 11px;
+    color: #5C6B6A;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #E8E4DA;
+  }
+  .section-label {
+    font-size: 10px;
+    color: #8B9897;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 18px 0 8px;
+  }
+  .section-label:first-of-type { margin-top: 4px; }
+  
+  .input-group { margin-bottom: 14px; }
+  .input-group label {
+    display: block;
+    font-size: 11px;
+    color: #5C6B6A;
+    margin-bottom: 4px;
+    letter-spacing: 0.02em;
+  }
+  .input-wrap {
+    display: flex;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1px solid #DDE4E2;
+    border-radius: 6px;
+    transition: border-color 0.15s;
+  }
+  .input-wrap:focus-within {
+    border-color: #2E5C42;
+  }
+  .input-wrap .prefix, .input-wrap .suffix {
+    font-size: 12px;
+    color: #5C6B6A;
+    padding: 0 8px;
+    white-space: nowrap;
+  }
+  .input-wrap input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #0F2422;
+    font-variant-numeric: tabular-nums;
+    width: 100%;
+    min-width: 0;
+  }
+  .input-wrap input[type="number"]::-webkit-outer-spin-button,
+  .input-wrap input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .input-hint {
+    font-size: 10px; color: #8B9897;
+    margin-top: 3px; font-style: italic;
+  }
+  
+  .year-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .year-grid .year-cell label {
+    font-size: 9px; color: #8B9897;
+    text-align: center; display: block; margin-bottom: 2px;
+  }
+  .year-grid .year-cell input {
+    width: 100%;
+    text-align: center;
+    padding: 5px 4px;
+    font-size: 12px;
+    border: 1px solid #DDE4E2;
+    border-radius: 4px;
+    background: #FFFFFF;
+    font-variant-numeric: tabular-nums;
+    color: #0F2422;
+  }
+  
+  /* Main area */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .kpi {
+    background: #FFFFFF;
+    border-radius: 8px;
+    padding: 14px 16px;
+    border: 1px solid #DDE4E2;
+  }
+  .kpi .label {
+    font-size: 10px;
+    color: #5C6B6A;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .kpi .value {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .kpi .sub {
+    font-size: 11px;
+    color: #8B9897;
+    margin-top: 2px;
+  }
+  
+  .panel {
+    background: #FFFFFF;
+    border-radius: 10px;
+    border: 1px solid #DDE4E2;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .panel-head {
+    padding: 14px 20px;
+    border-bottom: 1px solid #E8E4DA;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .panel-head .title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .panel-head .meta {
+    font-size: 10px;
+    color: #8B9897;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  
+  table.pnl {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  table.pnl th {
+    padding: 8px 12px;
+    font-size: 10px;
+    color: #8B9897;
+    text-align: right;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  table.pnl th:first-child { text-align: left; }
+  table.pnl td {
+    padding: 6px 8px;
+    font-size: 12px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  table.pnl td:first-child {
+    text-align: left;
+    padding-left: 12px;
+    color: #0F2422;
+  }
+  table.pnl tr.section td {
+    background: #E8F0EE;
+    font-weight: 600;
+  }
+  table.pnl tr.total td {
+    background: #0F2422;
+    color: #FFFFFF;
+    font-weight: 600;
+  }
+  table.pnl tr.divider td {
+    border-top: 1px solid #C8D2D0;
+  }
+  table.pnl tr.indent td:first-child {
+    padding-left: 28px;
+    color: #5C6B6A;
+  }
+  table.pnl tr.indent td {
+    color: #5C6B6A;
+    font-size: 11px;
+  }
+  
+  .twocol {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 900px) {
+    .twocol { grid-template-columns: 1fr; }
+  }
+  
+  .cohort {
+    background: #FFFFFF;
+    border-radius: 10px;
+    padding: 18px 20px;
+    border: 1px solid #DDE4E2;
+  }
+  .cohort .title {
+    font-size: 13px; font-weight: 600;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #E8E4DA;
+  }
+  .cohort .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid #F0EDE6;
+    font-size: 12px;
+  }
+  .cohort .row:last-child { border-bottom: none; }
+  .cohort .row.sub {
+    color: #8B9897;
+    padding-left: 12px;
+    font-size: 11px;
+  }
+  .cohort .row.accent {
+    font-weight: 600;
+  }
+  
+  .sens {
+    background: #FFFFFF;
+    border-radius: 10px;
+    padding: 18px 20px;
+    border: 1px solid #DDE4E2;
+  }
+  .sens .title {
+    font-size: 13px; font-weight: 600;
+    margin-bottom: 4px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #E8E4DA;
+  }
+  .sens .desc {
+    font-size: 11px; color: #8B9897;
+    margin: -4px 0 14px;
+  }
+  table.sens-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  table.sens-table th {
+    padding: 8px 4px;
+    font-size: 10px;
+    color: #8B9897;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+    text-align: right;
+  }
+  table.sens-table th:first-child { text-align: left; }
+  table.sens-table td {
+    padding: 10px 4px;
+    font-size: 12px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    border-bottom: 1px solid #F0EDE6;
+  }
+  table.sens-table td:first-child {
+    text-align: left;
+    color: #5C6B6A;
+  }
+  table.sens-table tr.base td {
+    background: #E8F0EE;
+    font-weight: 500;
+  }
+  table.sens-table tr:last-child td { border-bottom: none; }
+  
+  .note {
+    margin-top: 18px;
+    padding: 12px 14px;
+    background: #F4F1EA;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #5C6B6A;
+    line-height: 1.55;
+  }
+  
+  .footer-note {
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.55);
+    border-radius: 8px;
+    font-size: 11px;
+    color: #5C6B6A;
+    line-height: 1.6;
+  }
+  .footer-note strong { color: #0F2422; font-weight: 600; }
+  
+  .pos { color: #2E5C42; font-weight: 600; }
+  .neg { color: #A04545; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  
+  <div class="header">
+    <div class="eyebrow">Financial model · 5-year projection</div>
+    <h1>Helium Homes</h1>
+    <div class="sub">Gated society rental platform · supply-centric unit economics</div>
+  </div>
+  
+  <div class="layout">
+    
+    <aside class="sidebar">
+      <div class="sidebar-title">Inputs</div>
+      
+      <div class="section-label">Per-transaction</div>
+      
+      <div class="input-group">
+        <label>Avg monthly rent</label>
+        <div class="input-wrap">
+          <span class="prefix">₹</span>
+          <input type="number" id="rent" value="63000" step="1000" />
+        </div>
+        <div class="input-hint">₹63,000 per deck</div>
+      </div>
+      
+      <div class="input-group">
+        <label>Owner fee</label>
+        <div class="input-wrap">
+          <input type="number" id="ownerFee" value="5.4" step="0.1" />
+          <span class="suffix">% of rent</span>
+        </div>
+        <div class="input-hint">5.4% per deck; 6% stable state</div>
+      </div>
+      
+      <div class="input-group">
+        <label>Tenant brokerage</label>
+        <div class="input-wrap">
+          <input type="number" id="tenantBrk" value="1.0" step="0.1" />
+          <span class="suffix">months of rent</span>
+        </div>
+        <div class="input-hint">1 month at move-in</div>
+      </div>
+      
+      <div class="input-group">
+        <label>Avg tenant stay</label>
+        <div class="input-wrap">
+          <input type="number" id="stay" value="24" step="1" />
+          <span class="suffix">months</span>
+        </div>
+        <div class="input-hint">24 mths per deck</div>
+      </div>
+      
+      <div class="input-group">
+        <label>Vacancy between tenants</label>
+        <div class="input-wrap">
+          <input type="number" id="vac" value="9.5" step="0.5" />
+          <span class="suffix">days</span>
+        </div>
+        <div class="input-hint">9.5 days current; 60 days max cap</div>
+      </div>
+      
+      <div class="input-group">
+        <label>Ops cost per turnover</label>
+        <div class="input-wrap">
+          <span class="prefix">₹</span>
+          <input type="number" id="ops" value="11500" step="500" />
+        </div>
+        <div class="input-hint">Move-in, touch-up, demand assoc.</div>
+      </div>
+      
+      <div class="input-group">
+        <label>Demand CAC (per tenant)</label>
+        <div class="input-wrap">
+          <span class="prefix">₹</span>
+          <input type="number" id="dcac" value="20000" step="500" />
+        </div>
+        <div class="input-hint">Tenant acquisition</div>
+      </div>
+      
+      <div class="input-group">
+        <label>Supply CAC (per home)</label>
+        <div class="input-wrap">
+          <span class="prefix">₹</span>
+          <input type="number" id="scac" value="17500" step="500" />
+        </div>
+        <div class="input-hint">Owner acquisition (one-time)</div>
+      </div>
+      
+      <div class="section-label">Supply contract</div>
+      
+      <div class="input-group">
+        <label>Supply lock-in</label>
+        <div class="input-wrap">
+          <input type="number" id="lockin" value="2" step="1" />
+          <span class="suffix">years</span>
+        </div>
+        <div class="input-hint">Owner can exit after this</div>
+      </div>
+      
+      <div class="input-group">
+        <label>Post-lockin annual churn</label>
+        <div class="input-wrap">
+          <input type="number" id="pchurn" value="25" step="5" />
+          <span class="suffix">%</span>
+        </div>
+        <div class="input-hint">Owners leaving each year post-lockin</div>
+      </div>
+      
+      <div class="input-group">
+        <label>Max contract life</label>
+        <div class="input-wrap">
+          <input type="number" id="maxlife" value="5" step="1" />
+          <span class="suffix">years</span>
+        </div>
+        <div class="input-hint">Hard cap on relationship</div>
+      </div>
+      
+      <div class="section-label">Macro</div>
+      
+      <div class="input-group">
+        <label>GST on revenue</label>
+        <div class="input-wrap">
+          <input type="number" id="gst" value="18" step="1" />
+          <span class="suffix">%</span>
+        </div>
+        <div class="input-hint">18% per deck</div>
+      </div>
+      
+      <div class="input-group">
+        <label>Annual rent escalation</label>
+        <div class="input-wrap">
+          <input type="number" id="esc" value="5" step="0.5" />
+          <span class="suffix">%</span>
+        </div>
+        <div class="input-hint">5% typical</div>
+      </div>
+      
+      <div class="section-label">Supply growth</div>
+      
+      <div class="input-group">
+        <label>New homes added per month (by year)</label>
+        <div class="year-grid">
+          <div class="year-cell"><label>Y1</label><input type="number" id="h0" value="40" /></div>
+          <div class="year-cell"><label>Y2</label><input type="number" id="h1" value="200" /></div>
+          <div class="year-cell"><label>Y3</label><input type="number" id="h2" value="800" /></div>
+          <div class="year-cell"><label>Y4</label><input type="number" id="h3" value="2000" /></div>
+          <div class="year-cell"><label>Y5</label><input type="number" id="h4" value="4000" /></div>
+        </div>
+        <div class="input-hint" style="text-align:right;">May'26: 40/mth current</div>
+      </div>
+    </aside>
+    
+    <main>
+      
+      <div class="kpi-grid" id="kpis"></div>
+      
+      <div class="panel">
+        <div class="panel-head">
+          <div class="title">P&amp;L Projection</div>
+          <div class="meta">5-year horizon</div>
+        </div>
+        <div style="padding: 8px 0 16px;">
+          <table class="pnl" id="pnl"></table>
+        </div>
+      </div>
+      
+      <div class="twocol">
+        <div class="cohort">
+          <div class="title">Per-home cohort economics</div>
+          <div id="cohort"></div>
+        </div>
+        
+        <div class="sens">
+          <div class="title">Sensitivity · vacancy days</div>
+          <div class="desc">Per-home lifetime CM2 at different vacancy levels</div>
+          <table class="sens-table" id="sens"></table>
+          <div class="note" id="sens-note"></div>
+        </div>
+      </div>
+      
+      <div class="footer-note">
+        <strong>Modeling notes:</strong> Active homes = cohort sum, with full retention through lock-in and exponential churn after. Tenant transactions = (avg active homes ÷ tenant stay) + new homes added (initial tenant placement). Vacancy cost applied once per tenant transaction. Owner fee earned monthly on occupied homes only. GST applied to gross revenue. Supply CAC paid once at onboarding; demand CAC paid every tenant turnover. Effective contract life integrates the survival curve (full retention through lock-in, exponential decay after, capped at max life).
+      </div>
+      
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+  
+  const fmtINR = (n) => {
+    if (n === null || n === undefined || isNaN(n)) return '—';
+    const abs = Math.abs(n);
+    const sign = n < 0 ? '-' : '';
+    if (abs >= 1e7) return sign + '₹' + (abs/1e7).toFixed(2) + ' Cr';
+    if (abs >= 1e5) return sign + '₹' + (abs/1e5).toFixed(2) + ' L';
+    if (abs >= 1e3) return sign + '₹' + (abs/1e3).toFixed(1) + 'K';
+    return sign + '₹' + Math.round(abs);
+  };
+  const fmtNum = (n) => isNaN(n) ? '—' : Math.round(n).toLocaleString('en-IN');
+  const fmtPct = (n) => isNaN(n) ? '—' : (n*100).toFixed(1) + '%';
+  const fmtRent = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+  
+  function val(id) { return parseFloat($(id).value) || 0; }
+  
+  function calc() {
+    const rent = val('rent');
+    const ownerFee = val('ownerFee') / 100;
+    const tenantBrk = val('tenantBrk');
+    const stay = val('stay');
+    const stayYrs = stay / 12;
+    const vac = val('vac');
+    const ops = val('ops');
+    const dcac = val('dcac');
+    const scac = val('scac');
+    const lockin = val('lockin');
+    const pchurn = val('pchurn') / 100;
+    const maxlife = val('maxlife');
+    const gst = val('gst') / 100;
+    const esc = val('esc') / 100;
+    const homesPerMonth = [val('h0'), val('h1'), val('h2'), val('h3'), val('h4')];
+    
+    const years = [1,2,3,4,5];
+    const newHomesByYear = homesPerMonth.map(p => p * 12);
+    
+    const survival = (age) => {
+      if (age > maxlife) return 0;
+      if (age <= lockin) return 1;
+      return Math.pow(1 - pchurn, age - lockin);
+    };
+    
+    const activeHomesByYear = years.map(y => {
+      let active = 0;
+      for (let cy = 1; cy <= y; cy++) {
+        const age = y - cy + 0.5;
+        active += newHomesByYear[cy-1] * survival(age);
+      }
+      return active;
+    });
+    
+    const tenantTxnsByYear = years.map((y, i) => {
+      const avgActive = i === 0 ? activeHomesByYear[0]/2 : (activeHomesByYear[i-1] + activeHomesByYear[i])/2;
+      const recurring = avgActive / stayYrs;
+      const initial = newHomesByYear[i];
+      return recurring + initial;
+    });
+    
+    const rentByYear = years.map(y => rent * Math.pow(1+esc, y-1));
+    
+    const ownerRevByYear = years.map((y, i) => {
+      const avgActive = i === 0 ? activeHomesByYear[0]/2 : (activeHomesByYear[i-1] + activeHomesByYear[i])/2;
+      const vacFrac = (tenantTxnsByYear[i] * vac) / Math.max(avgActive * 365, 1);
+      const occ = Math.max(0, 1 - vacFrac);
+      return avgActive * rentByYear[i] * 12 * ownerFee * occ;
+    });
+    
+    const tenantRevByYear = tenantTxnsByYear.map((t, i) => t * rentByYear[i] * tenantBrk);
+    const grossRevByYear = ownerRevByYear.map((o, i) => o + tenantRevByYear[i]);
+    const netRevByYear = grossRevByYear.map(g => g / (1+gst));
+    const vacCostByYear = tenantTxnsByYear.map((t, i) => t * rentByYear[i] * (vac/30));
+    const opsCostByYear = tenantTxnsByYear.map(t => t * ops);
+    const sCACByYear = newHomesByYear.map(n => n * scac);
+    const dCACByYear = tenantTxnsByYear.map(t => t * dcac);
+    const gmByYear = netRevByYear.map((nr, i) => nr - vacCostByYear[i]);
+    const cm1ByYear = gmByYear.map((g, i) => g - opsCostByYear[i]);
+    const cm2ByYear = cm1ByYear.map((c, i) => c - sCACByYear[i] - dCACByYear[i]);
+    
+    // Cohort (per home over life)
+    let effLife = 0;
+    for (let t = 0; t <= maxlife; t += 0.1) effLife += survival(t) * 0.1;
+    const tenantCycles = effLife / stayYrs;
+    const ownerRevPerHome = rent * 12 * ownerFee * effLife;
+    const tenantRevPerHome = rent * tenantBrk * tenantCycles;
+    const totalRevPerHome = ownerRevPerHome + tenantRevPerHome;
+    const netRevPerHome = totalRevPerHome / (1+gst);
+    const vacCostPerHome = rent * (vac/30) * tenantCycles;
+    const opsCostPerHome = ops * tenantCycles;
+    const cm1PerHome = netRevPerHome - vacCostPerHome - opsCostPerHome;
+    const totalCAC = scac + dcac * tenantCycles;
+    const cm2PerHome = cm1PerHome - totalCAC;
+    
+    const monthlyNetContrib = (rent * ownerFee) / (1+gst) - (ops / stay) - (rent * (vac/30) / stay);
+    const initialOutlay = scac + dcac;
+    const paybackMo = monthlyNetContrib > 0 ? initialOutlay / monthlyNetContrib : Infinity;
+    const ltvCac = totalCAC > 0 ? cm1PerHome / totalCAC : 0;
+    
+    return {
+      years, newHomesByYear, activeHomesByYear, tenantTxnsByYear, rentByYear,
+      ownerRevByYear, tenantRevByYear, grossRevByYear, netRevByYear,
+      vacCostByYear, opsCostByYear, sCACByYear, dCACByYear,
+      gmByYear, cm1ByYear, cm2ByYear,
+      effLife, tenantCycles, totalRevPerHome, netRevPerHome,
+      vacCostPerHome, opsCostPerHome, cm1PerHome, totalCAC, cm2PerHome,
+      paybackMo, ltvCac, scac, dcac, vac, rent, ownerFee, tenantBrk,
+      stayYrs, ops, gst
+    };
+  }
+  
+  function renderKPIs(c) {
+    const items = [
+      { label: 'Y5 Net Revenue', val: fmtINR(c.netRevByYear[4]), sub: 'ex-GST' },
+      { label: 'Y5 Active Homes', val: fmtNum(c.activeHomesByYear[4]), sub: 'under management' },
+      { label: 'Y5 CM2 Margin', val: fmtPct(c.cm2ByYear[4]/c.netRevByYear[4]), sub: fmtINR(c.cm2ByYear[4]) },
+      { label: 'LTV / Total CAC', val: c.ltvCac.toFixed(2) + '×', sub: (isFinite(c.paybackMo) ? Math.round(c.paybackMo) : '∞') + ' mo payback' }
+    ];
+    $('kpis').innerHTML = items.map(k => `
+      <div class="kpi">
+        <div class="label">${k.label}</div>
+        <div class="value">${k.val}</div>
+        <div class="sub">${k.sub}</div>
+      </div>
+    `).join('');
+  }
+  
+  function renderPNL(c) {
+    const yrHdrs = c.years.map(y => `<th>Year ${y}</th>`).join('');
+    const row = (label, vals, fmt, cls) => {
+      const tds = vals.map(v => `<td>${fmt(v)}</td>`).join('');
+      return `<tr class="${cls||''}"><td>${label}</td>${tds}</tr>`;
+    };
+    
+    let html = `<thead><tr><th></th>${yrHdrs}</tr></thead><tbody>`;
+    html += row('New homes added', c.newHomesByYear, fmtNum);
+    html += row('Active homes (year-end)', c.activeHomesByYear, fmtNum, 'section');
+    html += row('Tenant transactions', c.tenantTxnsByYear, fmtNum);
+    html += row('Avg monthly rent', c.rentByYear, fmtRent);
+    
+    html += row('Owner revenue', c.ownerRevByYear, fmtINR, 'divider');
+    html += row('Tenant revenue', c.tenantRevByYear, fmtINR);
+    html += row('Gross revenue (incl GST)', c.grossRevByYear, fmtINR, 'total');
+    html += row('Net revenue (ex GST)', c.netRevByYear, fmtINR, 'section');
+    
+    html += row('(−) Vacancy cost', c.vacCostByYear.map(v => -v), fmtINR, 'divider');
+    html += row('Gross margin', c.gmByYear, fmtINR, 'section');
+    html += row('Gross margin %', c.gmByYear.map((g,i) => g/c.netRevByYear[i]), fmtPct, 'indent');
+    
+    html += row('(−) Operations', c.opsCostByYear.map(v => -v), fmtINR, 'divider');
+    html += row('CM1 (after ops)', c.cm1ByYear, fmtINR, 'section');
+    html += row('CM1 margin %', c.cm1ByYear.map((cv,i) => cv/c.netRevByYear[i]), fmtPct, 'indent');
+    
+    html += row('(−) Supply CAC', c.sCACByYear.map(v => -v), fmtINR, 'divider');
+    html += row('(−) Demand CAC', c.dCACByYear.map(v => -v), fmtINR);
+    html += row('CM2 / EBITDA', c.cm2ByYear, fmtINR, 'total');
+    html += row('CM2 margin %', c.cm2ByYear.map((cv,i) => cv/c.netRevByYear[i]), fmtPct, 'indent');
+    
+    html += '</tbody>';
+    $('pnl').innerHTML = html;
+  }
+  
+  function renderCohort(c) {
+    const rows = [
+      { label: 'Effective contract life', val: c.effLife.toFixed(1) + ' yrs' },
+      { label: 'Tenant cycles per home', val: c.tenantCycles.toFixed(2) },
+      { label: 'Lifetime gross revenue', val: fmtINR(c.totalRevPerHome) },
+      { label: 'Lifetime net revenue', val: fmtINR(c.netRevPerHome) },
+      { label: '(−) Vacancy cost', val: fmtINR(-c.vacCostPerHome), sub: true },
+      { label: '(−) Operations', val: fmtINR(-c.opsCostPerHome), sub: true },
+      { label: 'CM1 / contribution (LTV)', val: fmtINR(c.cm1PerHome), accent: true },
+      { label: 'Total CAC over life', val: fmtINR(c.totalCAC) },
+      { label: '↳ Supply CAC', val: fmtINR(c.scac), sub: true },
+      { label: '↳ Demand CAC × cycles', val: fmtINR(c.dcac * c.tenantCycles), sub: true },
+      { label: 'CM2 per home (lifetime)', val: fmtINR(c.cm2PerHome), accent: true },
+      { label: 'LTV / CAC', val: c.ltvCac.toFixed(2) + '×', accent: true },
+      { label: 'Payback period', val: (isFinite(c.paybackMo) ? c.paybackMo.toFixed(1) : '∞') + ' months', accent: true }
+    ];
+    $('cohort').innerHTML = rows.map(r => `
+      <div class="row ${r.accent?'accent':''} ${r.sub?'sub':''}">
+        <span>${r.label}</span>
+        <span>${r.val}</span>
+      </div>
+    `).join('');
+  }
+  
+  function renderSensitivity(c) {
+    const mults = [0.5, 1.0, 2.0, 4.0, 60/c.vac];
+    const labels = ['Half base', 'Base case', '2× base', '4× base', '60-day max cap'];
+    
+    const rows = mults.map((m, idx) => {
+      const sVac = c.vac * m;
+      const cycles = c.effLife / c.stayYrs;
+      const ownerR = c.rent * 12 * c.ownerFee * c.effLife;
+      const tenantR = c.rent * c.tenantBrk * cycles;
+      const netR = (ownerR + tenantR) / (1+c.gst);
+      const vacC = c.rent * (sVac/30) * cycles;
+      const opsC = c.ops * cycles;
+      const cac = c.scac + c.dcac * cycles;
+      const cm2 = netR - vacC - opsC - cac;
+      return { label: labels[idx], vac: sVac, cm2, cm2Pct: cm2/netR, isBase: idx === 1 };
+    });
+    
+    let html = `<thead><tr>
+      <th>Scenario</th><th>Vacancy</th><th>CM2</th><th>CM2 %</th>
+    </tr></thead><tbody>`;
+    html += rows.map(s => `
+      <tr class="${s.isBase ? 'base' : ''}">
+        <td>${s.label}</td>
+        <td>${s.vac.toFixed(1)} days</td>
+        <td class="${s.cm2 > 0 ? 'pos' : 'neg'}">${fmtINR(s.cm2)}</td>
+        <td>${fmtPct(s.cm2Pct)}</td>
+      </tr>
+    `).join('');
+    html += '</tbody>';
+    $('sens').innerHTML = html;
+    
+    const baseCM2 = rows[1].cm2;
+    const maxCapCM2 = rows[4].cm2;
+    let note = '';
+    if (baseCM2 > 0 && maxCapCM2 < 0) {
+      note = 'Vacancy is the load-bearing input. At the 60-day max cap, lifetime CM2 turns negative — the business depends on holding sub-15-day average vacancy that the visual AI engine is meant to deliver.';
+    } else if (baseCM2 > 0 && maxCapCM2 > 0) {
+      note = 'Even at the 60-day max cap, lifetime CM2 stays positive — robust at current input levels. Other risks (CAC, churn, supply growth) matter more here.';
+    } else {
+      note = 'Base case lifetime CM2 is already weak. Pull on owner fee, demand CAC, or tenant stay to improve.';
+    }
+    $('sens-note').textContent = note;
+  }
+  
+  function update() {
+    const c = calc();
+    renderKPIs(c);
+    renderPNL(c);
+    renderCohort(c);
+    renderSensitivity(c);
+  }
+  
+  // Wire all inputs
+  document.querySelectorAll('input[type="number"]').forEach(el => {
+    el.addEventListener('input', update);
+    el.addEventListener('change', update);
+  });
+  
+  update();
+})();
+</script>
+
+</body>
+</html>
